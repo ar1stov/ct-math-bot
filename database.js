@@ -1,30 +1,30 @@
 const database = {
-    "Тригонометрия": [
-        { 
-            question: "img/trig_1.png", 
-            solution: "img/trig_1_resh.png", 
-            answer: "24" 
-        },
-        { 
-            question: "img/trig_2.png", 
-            solution: "img/trig_2_resh.png", 
-            options: ["1", "2", "3", "4", "5"],
-            answer: "3" 
+    "Математика": {
+        "type": "nested",
+        "sections": {
+            "Алгебра": {
+                "Тригонометрия": [
+                    { question: "img/math/alg_trig_1.png", solution: "img/math/alg_trig_sol1.png", answer: "1" }
+                ],
+                "Прогрессии": []
+            },
+            "Геометрия": {
+                "Планиметрия": [],
+                "Стереометрия": []
+            }
         }
-    ],
-    "Планиметрия": [
-        { 
-            question: "img/plan_q1.png", 
-            solution: "img/plan_sol1.png", 
-            options: ["0", "1", "0.5", "-1"], 
-            answer: "1" 
+    },
+    "Физика": {
+        "type": "flat",
+        "topics": {
+            "Механика": [
+                { question: "img/phys/mech_1.png", solution: "img/phys/mech_sol1.png", answer: "10" }
+            ],
+            "Электричество": []
         }
-    ],
-    "Стереометрия": [
-        { 
-            question: "img/stereo_q1.png", 
-            solution: "img/stereo_sol1.png", 
-            answer: "15" 
-        }
-    ]
+    },
+    "Русский язык": {
+        "type": "flat",
+        "topics": { "Орфография": [], "Пунктуация": [] }
+    }
 };
