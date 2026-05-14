@@ -4,7 +4,8 @@ const database = {
         "sections": {
             "Алгебра": {
                 "Тригонометрия": [
-                    { question: "img/math/alg_trig_1.png", solution: "img/math/alg_trig_sol1.png", answer: "1" }
+                    { question: "img/math/trig/1.png", solution: "img/math/trig/1_resh.png", "options": ["1", "2", "3", "4", "5"], answer: "3" },
+                    { question: "img/math/trig/2.png", solution: "img/math/trig/2_resh.png", answer: "24" }
                 ],
                 "Прогрессии": []
             },
