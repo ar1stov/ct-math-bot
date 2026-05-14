@@ -75,15 +75,11 @@
     tg.expand();
 
     // --- НАСТРОЙКИ FIREBASE ---
-    // Вставь свои данные из консоли Firebase сюда
+    // ЗАМЕНИ НА СВОИ ДАННЫЕ ИЗ КОНСОЛИ FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyAyi5tw9ImFG-mGTBqnaD9BeHcDO6kWJtE",
-        authDomain: "ct-2026-stats.firebaseapp.com",
+        databaseURL: "https://ct-2026-stats-default-rtdb.europe-west1.firebasedatabase.app/",
         projectId: "ct-2026-stats",
-        storageBucket: "ct-2026-stats.firebasestorage.app",
-        messagingSenderId: "32583263801",
-        appId: "1:32583263801:web:07e1094d0fb228d4218fe8",
-        measurementId: "G-9MN6MPTKWJ"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -92,7 +88,6 @@
     let state = { sub: null, sec: null, top: null, quiz: null, selected: null };
     let cloudData = { stats: {}, activeTest: null };
 
-    // Хелперы
     function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
     async function syncFromCloud() {
@@ -240,14 +235,35 @@
         if (!val) return;
         const btn = document.getElementById('submit-btn'); btn.disabled = true;
         const ok = String(val).toLowerCase().replace(',','.') == String(t.answer).toLowerCase().replace(',','.');
+        
+        // Подготовка данных для Firebase (очистка ключей)
+        const cleanT = (t.topicOrigin || state.quiz.top).replace(/[.#$\[\]]/g, "_");
+        const cleanS = state.quiz.sub.replace(/[.#$\[\]]/g, "_");
+        const ref = dbGlobal.ref('stats_v1/' + cleanS + '/' + cleanT);
+
         if (ok) {
-            state.quiz.correct++; state.quiz.solvedTasks.push({ topic: t.topicOrigin || state.quiz.top, questionId: t.question, status: 'success' });
-            btn.classList.add('correct-bg'); btn.innerText = "Верно!"; tg.HapticFeedback.notificationOccurred('success');
+            state.quiz.correct++;
+            state.quiz.solvedTasks.push({ topic: t.topicOrigin || state.quiz.top, questionId: t.question, status: 'success' });
+            btn.classList.add('correct-bg'); btn.innerText = "Верно!";
+            tg.HapticFeedback.notificationOccurred('success');
+            
+            // Мгновенная отправка успеха в Firebase
+            ref.transaction(c => {
+                if (!c) return { ok: 1, err: 0 };
+                c.ok = (c.ok || 0) + 1; return c;
+            });
         } else {
             state.quiz.solvedTasks.push({ topic: t.topicOrigin || state.quiz.top, questionId: t.question, status: 'error' });
             btn.classList.add('wrong-bg'); btn.innerText = "Ошибка";
             document.getElementById('wrong-hint').innerText = `Ответ: ${t.answer}`;
-            document.getElementById('wrong-hint').style.display = 'block'; tg.HapticFeedback.notificationOccurred('error');
+            document.getElementById('wrong-hint').style.display = 'block';
+            tg.HapticFeedback.notificationOccurred('error');
+
+            // Мгновенная отправка ошибки в Firebase
+            ref.transaction(c => {
+                if (!c) return { ok: 0, err: 1 };
+                c.err = (c.err || 0) + 1; return c;
+            });
         }
         document.getElementById('solution-section').style.display = 'block';
     }
@@ -261,23 +277,10 @@
 
     function finishQuiz() {
         state.quiz.solvedTasks.forEach(st => {
-            // 1. Личный прогресс
             if (st.status === 'success') {
                 if (!cloudData.stats[st.topic]) cloudData.stats[st.topic] = { solvedIds: [] };
                 if (!cloudData.stats[st.topic].solvedIds.includes(st.questionId)) cloudData.stats[st.topic].solvedIds.push(st.questionId);
             }
-            
-            // 2. FIREBASE ТРАНЗАКЦИЯ (Для админа)
-            const cleanT = st.topic.replace(/[.#$\[\]]/g, "_");
-            const cleanS = state.quiz.sub.replace(/[.#$\[\]]/g, "_");
-            const ref = dbGlobal.ref('stats_v1/' + cleanS + '/' + cleanT);
-            
-            ref.transaction((curr) => {
-                if (curr === null) return { ok: st.status === 'success' ? 1 : 0, err: st.status === 'error' ? 1 : 0 };
-                if (st.status === 'success') curr.ok = (curr.ok || 0) + 1;
-                else curr.err = (curr.err || 0) + 1;
-                return curr;
-            });
         });
         
         cloudData.activeTest = null;
