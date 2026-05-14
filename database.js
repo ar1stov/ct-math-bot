@@ -5,6 +5,12 @@ const database = {
             solution: "img/trig_1_resh.png", 
             answer: "24" 
         }
+        { 
+            question: "img/trig_2.png", 
+            solution: "img/trig_2_resh.png", 
+            options: ["1", "2", "3", "4", "5"],
+            answer: "3" 
+        }
     ],
     "Планиметрия": [
         { 
