@@ -4,7 +4,7 @@ const database = {
             question: "img/trig_1.png", 
             solution: "img/trig_1_resh.png", 
             answer: "24" 
-        }
+        },
         { 
             question: "img/trig_2.png", 
             solution: "img/trig_2_resh.png", 
