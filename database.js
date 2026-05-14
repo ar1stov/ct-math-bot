@@ -1,7 +1,7 @@
 const database = {
     "Тригонометрия": [
         { 
-            question: "img/trig_11.png", 
+            question: "img/trig_1.png", 
             solution: "img/trig_1_resh.png", 
             answer: "24" 
         }
