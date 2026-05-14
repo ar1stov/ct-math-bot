@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Математика ЦТ 2026</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="database.js"></script>
     <style>
         /* ФИКСИРОВАННЫЕ ЦВЕТА (не зависят от темы телефона) */
         :root {
@@ -204,20 +205,6 @@
 </nav>
 
 <script>
-    // БАЗА ДАННЫХ (Замени ссылки на свои скриншоты)
-    const database = {
-        "Тригонометрия": [
-            { question: "img/trig_1.png", solution: "img/trig_1_resh.png", options: ["23", "24", "26", "28"], answer: "24" },
-            { question: "https://placehold.co/600x400?text=Вопрос+2", solution: "https://placehold.co/600x400?text=Решение+2", answer: "120" }
-        ],
-        "Планиметрия": [
-            { question: "https://placehold.co/600x400?text=Геометрия+1", solution: "https://placehold.co/600x400?text=Решение+Гео", answer: "40" }
-        ],
-        "Прогрессии": [
-            { question: "https://placehold.co/600x400?text=Прогрессия+1", solution: "https://placehold.co/600x400?text=Решение+Прог", answer: "10" }
-        ]
-    };
-
     let currentTest = null;
     let selectedOption = null;
     const tg = window.Telegram.WebApp;
