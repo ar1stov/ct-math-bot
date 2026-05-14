@@ -77,10 +77,15 @@
     // --- НАСТРОЙКИ FIREBASE ---
     // ЗАМЕНИ НА СВОИ ДАННЫЕ ИЗ КОНСОЛИ FIREBASE
     const firebaseConfig = {
-        apiKey: "AIzaSyAyi5tw9ImFG-mGTBqnaD9BeHcDO6kWJtE",
-        databaseURL: "https://ct-2026-stats-default-rtdb.europe-west1.firebasedatabase.app/",
-        projectId: "ct-2026-stats",
-    };
+  apiKey: "AIzaSyAyi5tw9ImFG-mGTBqnaD9BeHcDO6kWJtE",
+  authDomain: "ct-2026-stats.firebaseapp.com",
+  databaseURL: "https://ct-2026-stats-default-rtdb.europe-west1.firebasedatabase.app/",
+  projectId: "ct-2026-stats",
+  storageBucket: "ct-2026-stats.firebasestorage.app",
+  messagingSenderId: "32583263801",
+  appId: "1:32583263801:web:07e1094d0fb228d4218fe8",
+  measurementId: "G-9MN6MPTKWJ"
+};
 
     firebase.initializeApp(firebaseConfig);
     const dbGlobal = firebase.database();
