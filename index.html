@@ -3,304 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Математика ЦТ 2026</title>
+    <title>Тренажер ЦТ 2026</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <script src="database.js?v=1.0.1"></script> 
+    <script src="database.js?v=5.0"></script> 
 
     <style>
         :root {
-            --bg-color: #f0f2f5;
+            --bg-color: #f2f2f7;
             --card-bg: #ffffff;
             --text-main: #1c1c1e;
             --text-secondary: #8e8e93;
             --primary: #007aff;
             --success: #34c759;
             --error: #ff3b30;
+            --border: #d1d1d6;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color) !important;
-            color: var(--text-main) !important;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden;
             -webkit-tap-highlight-color: transparent;
         }
 
         .content-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px 15px 80px 15px;
+            flex: 1; overflow-y: auto;
+            padding: 20px 16px 100px 16px;
         }
 
+        /* Таб-бар */
         .tab-bar {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            height: 65px;
-            background: white;
-            border-top: 1px solid #e5e5ea;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
+            position: fixed; bottom: 0; width: 100%; height: 70px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            border-top: 0.5px solid var(--border);
+            display: flex; justify-content: space-around; align-items: center;
             padding-bottom: env(safe-area-inset-bottom);
-            z-index: 100;
+            z-index: 1000;
         }
-
         .tab-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 11px;
-            width: 50%;
+            display: flex; flex-direction: column; align-items: center;
+            background: none; border: none; color: var(--text-secondary);
+            font-size: 11px; width: 50%; transition: 0.2s;
         }
-
         .tab-item.active { color: var(--primary); }
-        .tab-icon { font-size: 22px; margin-bottom: 4px; }
+        .tab-icon { font-size: 24px; margin-bottom: 4px; }
 
-        .topic-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        /* Кнопки и карточки */
+        .card {
+            background: var(--card-bg); padding: 18px 20px; border-radius: 16px;
+            margin-bottom: 12px; display: flex; justify-content: space-between;
+            align-items: center; font-weight: 600; font-size: 17px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
         }
+        .card:active { background-color: #f9f9fb; transform: scale(0.98); }
 
-        .resume-banner {
-            background: #e7f3ff;
-            border: 1px solid var(--primary);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: none;
+        .back-btn {
+            color: var(--primary); margin-bottom: 15px; display: flex;
+            align-items: center; font-weight: 500; font-size: 16px; cursor: pointer;
         }
 
         .screen { display: none; }
-        .screen.active { display: block; }
+        .screen.active { display: block; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Стили теста */
         .image-container img {
-            width: 100%;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #eee;
+            width: 100%; border-radius: 12px; margin-bottom: 15px;
+            border: 1px solid #e5e5ea; background: white;
         }
-
-        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .opt-btn { 
-            background: #f1f1f7; 
-            padding: 14px; 
-            border-radius: 12px; 
-            border: 2px solid transparent; 
-            color: var(--text-main);
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .opt-btn {
+            background: #ffffff; padding: 16px; border-radius: 14px;
+            border: 2.5px solid #e5e5ea; font-size: 16px; font-weight: 600;
         }
         .opt-btn.selected { border-color: var(--primary); background: #e7f3ff; }
-
+        
         input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #d1d1d6;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            box-sizing: border-box;
-            font-size: 16px; /* Предотвращает зум на Samsung/iPhone */
+            width: 100%; padding: 16px; border: 2.5px solid #e5e5ea;
+            border-radius: 14px; margin-bottom: 15px; font-size: 17px;
+            box-sizing: border-box; outline: none; transition: border-color 0.2s;
         }
+        input:focus { border-color: var(--primary); }
 
         .main-btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-weight: 600;
+            width: 100%; padding: 18px; background: var(--primary);
+            color: white; border: none; border-radius: 16px;
+            font-size: 17px; font-weight: 700;
         }
+        .main-btn:disabled { opacity: 0.5; }
 
         .correct-bg { background-color: var(--success) !important; }
         .wrong-bg { background-color: var(--error) !important; }
 
-        .stat-item {
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
+        /* Статистика Аккордеон */
+        .stats-acc { background: white; border-radius: 16px; margin-bottom: 12px; overflow: hidden; border: 0.5px solid var(--border); }
+        .stats-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .stats-body { display: none; padding: 0 20px 16px 20px; border-top: 0.5px solid #f2f2f7; }
+        .stats-acc.open .stats-body { display: block; }
+        
+        .arrow {
+            width: 22px; height: 22px; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center; justify-content: center;
         }
-        .progress-bg { background: #e5e5ea; height: 8px; border-radius: 4px; margin-top: 8px; overflow: hidden; }
-        .progress-fill { background: var(--success); height: 100%; transition: 0.5s; width: 0%; }
+        .arrow svg { fill: none; stroke: var(--text-secondary); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+        .stats-acc.open .arrow { transform: rotate(180deg); }
+        .stats-acc.open .arrow svg { stroke: var(--primary); }
+
+        .progress-bg { background: #e5e5ea; height: 8px; border-radius: 4px; margin: 6px 0 12px 0; overflow: hidden; }
+        .progress-fill { background: var(--success); height: 100%; transition: 1s ease-out; }
     </style>
 </head>
 <body>
 
 <div class="content-area">
-    <div id="screen-tests" class="screen active">
-        <div id="resume-container" class="resume-banner">
-            <p style="margin: 0 0 10px 0;">У тебя есть незаконченный тест!</p>
-            <button class="main-btn" onclick="resumeTest()">Продолжить "<span id="resume-topic"></span>"</button>
-        </div>
-        <h2 id="main-title">Темы ЦТ 2026</h2>
-        <div id="topic-list">Подключение к базе данных...</div>
+    <div id="screen-subjects" class="screen active">
+        <h1 style="font-size: 28px; margin-bottom: 20px;">Предметы</h1>
+        <div id="subject-list"></div>
+    </div>
+
+    <div id="screen-sections" class="screen">
+        <div class="back-btn" onclick="showSubjects()"><span>‹ Предметы</span></div>
+        <h2 id="section-title">Разделы</h2>
+        <div id="section-list"></div>
+    </div>
+
+    <div id="screen-topics" class="screen">
+        <div class="back-btn" id="topic-back-btn"><span>‹ Назад</span></div>
+        <h2 id="topic-title">Темы</h2>
+        <div id="topic-list"></div>
     </div>
 
     <div id="screen-quiz" class="screen">
-        <div style="display:flex; justify-content: space-between; margin-bottom:15px; color:var(--text-secondary);">
-            <span id="q-topic-title">Тема</span>
-            <span id="q-progress">0 / 0</span>
+        <div class="back-btn" onclick="confirmExit()"><span>‹ Выйти из теста</span></div>
+        <div style="display:flex; justify-content: space-between; margin-bottom:10px; color:var(--text-secondary); font-size: 14px;">
+            <span id="q-header" style="font-weight: 600;"></span>
+            <span id="q-progress"></span>
         </div>
         <div class="image-container"><img id="q-img" src=""></div>
         <div id="options-container" class="options-grid"></div>
-        <input type="text" id="user-answer" placeholder="Введите ответ">
+        <input type="text" id="user-answer" placeholder="Ваш ответ">
         <div id="wrong-hint" style="color:var(--error); text-align:center; display:none; margin-bottom:15px; font-weight:bold;"></div>
         <button class="main-btn" id="submit-btn" onclick="handleCheck()">Ответить</button>
-        <div id="solution-section" style="display:none; margin-top:20px; border-top: 1px dashed #ccc; padding-top:20px;">
+        <div id="solution-section" style="display:none; margin-top:20px; border-top:1px dashed #ccc; padding-top:15px;">
             <div class="image-container"><img id="s-img" src=""></div>
             <button class="main-btn" style="background:var(--success);" onclick="handleNext()">Далее</button>
         </div>
     </div>
 
     <div id="screen-stats" class="screen">
-        <h2>Твои успехи</h2>
+        <h1 style="font-size: 28px; margin-bottom: 20px;">Статистика</h1>
         <div id="stats-container"></div>
     </div>
 </div>
 
 <nav class="tab-bar">
-    <button class="tab-item active" id="tab-tests" onclick="switchTab('tests')">
-        <span class="tab-icon">📖</span>
-        <span>Тесты</span>
+    <button class="tab-item active" id="tab-home" onclick="goToHome()">
+        <span class="tab-icon">🏠</span><span>Главная</span>
     </button>
     <button class="tab-item" id="tab-stats" onclick="switchTab('stats')">
-        <span class="tab-icon">📈</span>
-        <span>Статистика</span>
+        <span class="tab-icon">📈</span><span>Статистика</span>
     </button>
 </nav>
 
 <script>
-    let currentTest = null;
-    let selectedOption = null;
+    let state = { sub: null, sec: null, top: null, quiz: null, selected: null };
     const tg = window.Telegram.WebApp;
-    tg.ready(); // Сообщаем Telegram, что приложение готово
+    tg.ready();
     tg.expand();
 
     function switchTab(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
         document.getElementById('screen-' + screenId).classList.add('active');
-        document.getElementById('tab-' + screenId).classList.add('active');
-        if(screenId === 'stats') renderStats();
-        if(screenId === 'tests') { renderTopics(); checkResume(); }
-    }
-
-    function checkResume() {
-        const saved = localStorage.getItem('active_test');
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                document.getElementById('resume-topic').innerText = data.topic;
-                document.getElementById('resume-container').style.display = 'block';
-            } catch(e) { localStorage.removeItem('active_test'); }
+        if(screenId === 'stats') {
+            document.getElementById('tab-stats').classList.add('active');
+            renderStats();
         } else {
-            document.getElementById('resume-container').style.display = 'none';
+            document.getElementById('tab-home').classList.add('active');
         }
     }
 
-    function renderTopics() {
+    function goToHome() {
+        if (state.sub) {
+            const data = database[state.sub];
+            if (state.sec) showTopics(data.sections[state.sec], state.sec);
+            else if (data.type === 'flat') showTopics(data.topics, state.sub);
+            else showSections(data.sections);
+        } else {
+            showSubjects();
+        }
+    }
+
+    function showSubjects() {
+        state.sub = null; state.sec = null;
+        const list = document.getElementById('subject-list');
+        list.innerHTML = '';
         if (typeof database === 'undefined') return;
+        Object.keys(database).forEach(s => {
+            list.appendChild(createCard(s, () => {
+                state.sub = s;
+                if (database[s].type === 'nested') showSections(database[s].sections);
+                else showTopics(database[s].topics, s);
+            }));
+        });
+        switchTab('subjects');
+    }
+
+    function showSections(sections) {
+        const list = document.getElementById('section-list');
+        list.innerHTML = '';
+        document.getElementById('section-title').innerText = state.sub;
+        Object.keys(sections).forEach(sec => {
+            list.appendChild(createCard(sec, () => {
+                state.sec = sec;
+                showTopics(sections[sec], sec);
+            }));
+        });
+        switchTab('sections');
+    }
+
+    function showTopics(topics, title) {
         const list = document.getElementById('topic-list');
         list.innerHTML = '';
-        Object.keys(database).forEach(topic => {
-            const div = document.createElement('div');
-            div.className = 'topic-card';
-            div.innerHTML = `<span>${topic}</span> <span style="color:var(--primary)">→</span>`;
-            div.onclick = () => startNewTest(topic);
-            list.appendChild(div);
+        document.getElementById('topic-title').innerText = title;
+        document.getElementById('topic-back-btn').onclick = () => {
+            if (database[state.sub].type === 'nested') showSections(database[state.sub].sections);
+            else showSubjects();
+        };
+        Object.keys(topics).forEach(top => {
+            list.appendChild(createCard(top, () => startQuiz(top, topics[top])));
         });
+        switchTab('topics');
     }
 
-    function startNewTest(topic) {
-        currentTest = { topic: topic, tasks: database[topic], idx: 0, correct: 0 };
-        localStorage.setItem('active_test', JSON.stringify(currentTest));
-        openQuiz();
+    function createCard(text, onClick) {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `<span>${text}</span><span style="color:var(--primary); font-size:22px;">›</span>`;
+        div.onclick = onClick;
+        return div;
     }
 
-    function resumeTest() {
-        currentTest = JSON.parse(localStorage.getItem('active_test'));
-        openQuiz();
-    }
-
-    function openQuiz() {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('screen-quiz').classList.add('active');
+    function startQuiz(name, tasks) {
+        if (!tasks || tasks.length === 0) return alert("Задания скоро появятся!");
+        state.top = name;
+        state.quiz = { tasks, idx: 0, correct: 0 };
+        switchTab('quiz');
         renderTask();
     }
 
+    function confirmExit() {
+        tg.showConfirm("Прервать тест? Прогресс этого теста не сохранится.", (ok) => {
+            if (ok) goToHome();
+        });
+    }
+
     function renderTask() {
-        const task = currentTest.tasks[currentTest.idx];
-        selectedOption = null;
-        document.getElementById('q-topic-title').innerText = currentTest.topic;
-        document.getElementById('q-progress').innerText = `${currentTest.idx + 1} / ${currentTest.tasks.length}`;
+        const task = state.quiz.tasks[state.quiz.idx];
+        state.selected = null;
+        document.getElementById('q-header').innerText = state.top;
+        document.getElementById('q-progress').innerText = `${state.quiz.idx + 1} / ${state.quiz.tasks.length}`;
         document.getElementById('q-img').src = task.question;
         document.getElementById('s-img').src = task.solution;
         document.getElementById('solution-section').style.display = 'none';
         document.getElementById('wrong-hint').style.display = 'none';
         
         const btn = document.getElementById('submit-btn');
-        btn.disabled = false;
-        btn.className = 'main-btn';
-        btn.innerText = "Ответить";
+        btn.disabled = false; btn.className = 'main-btn'; btn.innerText = "Ответить";
 
-        const optContainer = document.getElementById('options-container');
-        const inputField = document.getElementById('user-answer');
+        const optCont = document.getElementById('options-container');
+        const input = document.getElementById('user-answer');
         
         if (task.options && task.options.length > 0) {
-            inputField.style.display = 'none';
-            optContainer.style.display = 'grid';
-            optContainer.innerHTML = '';
-            task.options.forEach(opt => {
+            input.style.display = 'none'; optCont.style.display = 'grid'; optCont.innerHTML = '';
+            task.options.forEach(o => {
                 const b = document.createElement('button');
-                b.className = 'opt-btn';
-                b.innerText = opt;
+                b.className = 'opt-btn'; b.innerText = o;
                 b.onclick = () => {
-                    selectedOption = opt;
+                    state.selected = o;
                     document.querySelectorAll('.opt-btn').forEach(el => el.classList.remove('selected'));
                     b.classList.add('selected');
                 };
-                optContainer.appendChild(b);
+                optCont.appendChild(b);
             });
         } else {
-            optContainer.style.display = 'none';
-            inputField.style.display = 'block';
-            inputField.value = '';
-            inputField.disabled = false;
+            optCont.style.display = 'none'; input.style.display = 'block'; input.value = '';
         }
     }
 
     function handleCheck() {
-        const task = currentTest.tasks[currentTest.idx];
-        const userVal = task.options ? selectedOption : document.getElementById('user-answer').value.trim();
-        if (!userVal) return;
+        const task = state.quiz.tasks[state.quiz.idx];
+        const val = task.options ? state.selected : document.getElementById('user-answer').value.trim();
+        if (!val) return;
         const btn = document.getElementById('submit-btn');
         btn.disabled = true;
 
-        if (String(userVal).toLowerCase() == String(task.answer).toLowerCase()) {
-            currentTest.correct++;
-            btn.classList.add('correct-bg');
-            btn.innerText = "Правильно!";
+        if (String(val).toLowerCase().replace(',','.') == String(task.answer).toLowerCase().replace(',','.')) {
+            state.quiz.correct++;
+            btn.classList.add('correct-bg'); btn.innerText = "Верно!";
             tg.HapticFeedback.notificationOccurred('success');
         } else {
-            btn.classList.add('wrong-bg');
-            btn.innerText = "Неверно";
-            document.getElementById('wrong-hint').innerText = `Ответ: ${task.answer}`;
+            btn.classList.add('wrong-bg'); btn.innerText = "Ошибка";
+            document.getElementById('wrong-hint').innerText = `Верный ответ: ${task.answer}`;
             document.getElementById('wrong-hint').style.display = 'block';
             tg.HapticFeedback.notificationOccurred('error');
         }
@@ -308,57 +316,78 @@
     }
 
     function handleNext() {
-        currentTest.idx++;
-        if (currentTest.idx < currentTest.tasks.length) {
-            localStorage.setItem('active_test', JSON.stringify(currentTest));
-            renderTask();
-        } else {
-            saveToStats();
+        state.quiz.idx++;
+        if (state.quiz.idx < state.quiz.tasks.length) renderTask();
+        else {
+            saveStats();
+            alert(`Тест завершен! Решено: ${state.quiz.correct} из ${state.quiz.tasks.length}`);
+            goToHome();
         }
     }
 
-    function saveToStats() {
-        const stats = JSON.parse(localStorage.getItem('stats') || '{}');
-        const topic = currentTest.topic;
-        if (!stats[topic]) stats[topic] = { solved: 0, total: 0 };
-        stats[topic].solved += currentTest.correct;
-        stats[topic].total += currentTest.tasks.length;
-        localStorage.setItem('stats', JSON.stringify(stats));
-        localStorage.removeItem('active_test');
-        alert(`Тест по теме ${topic} завершен!`);
-        switchTab('stats');
+    function saveStats() {
+        const stats = JSON.parse(localStorage.getItem('stats_v5') || '{}');
+        const key = state.top;
+        if (!stats[key]) stats[key] = { solved: 0, total: 0 };
+        stats[key].solved += state.quiz.correct;
+        stats[key].total += state.quiz.tasks.length;
+        localStorage.setItem('stats_v5', JSON.stringify(stats));
     }
 
     function renderStats() {
-        if (typeof database === 'undefined') return;
         const container = document.getElementById('stats-container');
-        const stats = JSON.parse(localStorage.getItem('stats') || '{}');
-        container.innerHTML = Object.keys(database).map(topic => {
-            const data = stats[topic] || { solved: 0, total: 0 };
-            const percent = data.total > 0 ? Math.round((data.solved / data.total) * 100) : 0;
-            return `
-                <div class="stat-item">
-                    <div style="display:flex; justify-content:space-between; font-weight:600;">
-                        <span>${topic}</span><span>${percent}%</span>
+        const saved = JSON.parse(localStorage.getItem('stats_v5') || '{}');
+        container.innerHTML = '';
+        const arrowSvg = `<svg viewBox="0 0 24 24" width="20" height="20"><path d="M6 9l6 6 6-6"></path></svg>`;
+
+        Object.keys(database).forEach(sub => {
+            const acc = document.createElement('div');
+            acc.className = 'stats-acc';
+            let topics = [];
+            if (database[sub].type === 'nested') {
+                Object.values(database[sub].sections).forEach(sec => topics.push(...Object.keys(sec)));
+            } else {
+                topics = Object.keys(database[sub].topics);
+            }
+
+            let sSum = 0, tSum = 0;
+            topics.forEach(t => { if(saved[t]) { sSum += saved[t].solved; tSum += saved[t].total; }});
+            const totalP = tSum > 0 ? Math.round((sSum/tSum)*100) : 0;
+
+            acc.innerHTML = `
+                <div class="stats-header" onclick="this.parentElement.classList.toggle('open')">
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-weight:700; font-size:17px;">${sub}</span>
+                        <span style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Прогресс: ${totalP}%</span>
                     </div>
-                    <div class="progress-bg"><div class="progress-fill" style="width:${percent}%"></div></div>
+                    <div class="arrow">${arrowSvg}</div>
+                </div>
+                <div class="stats-body">
+                    ${topics.map(t => {
+                        const s = saved[t] || { solved: 0, total: 0 };
+                        const p = s.total > 0 ? Math.round((s.solved/s.total)*100) : 0;
+                        return `
+                            <div style="margin-top:12px;">
+                                <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px;">
+                                    <span>${t}</span><span style="font-weight:600;">${p}%</span>
+                                </div>
+                                <div class="progress-bg"><div class="progress-fill" style="width:${p}%"></div></div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             `;
-        }).join('');
+            container.appendChild(acc);
+        });
     }
 
-    // Критическая правка загрузки:
-    function init() {
-        if (typeof database !== 'undefined') {
-            renderTopics();
-            checkResume();
-        } else {
-            // Если база не загрузилась за 3 сек, пробуем еще раз
-            setTimeout(init, 500);
-        }
-    }
-
-    window.addEventListener('load', init);
+    window.onload = () => {
+        let attempts = 0;
+        const check = setInterval(() => {
+            if (typeof database !== 'undefined') { showSubjects(); clearInterval(check); }
+            else if (attempts++ > 40) { document.getElementById('subject-list').innerText = "Ошибка базы"; clearInterval(check); }
+        }, 150);
+    };
 </script>
 </body>
 </html>
