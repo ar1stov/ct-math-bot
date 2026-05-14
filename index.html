@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Математика ЦТ 2026</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="database.js" defer></script> 
     
+    <script src="database.js?v=1.0.1"></script> 
+
     <style>
         :root {
             --bg-color: #f0f2f5;
@@ -28,6 +29,7 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .content-area {
@@ -112,6 +114,7 @@
             border-radius: 12px;
             margin-bottom: 15px;
             box-sizing: border-box;
+            font-size: 16px; /* Предотвращает зум на Samsung/iPhone */
         }
 
         .main-btn {
@@ -134,7 +137,7 @@
             margin-bottom: 10px;
         }
         .progress-bg { background: #e5e5ea; height: 8px; border-radius: 4px; margin-top: 8px; overflow: hidden; }
-        .progress-fill { background: var(--success); height: 100%; transition: 0.5s; }
+        .progress-fill { background: var(--success); height: 100%; transition: 0.5s; width: 0%; }
     </style>
 </head>
 <body>
@@ -145,8 +148,8 @@
             <p style="margin: 0 0 10px 0;">У тебя есть незаконченный тест!</p>
             <button class="main-btn" onclick="resumeTest()">Продолжить "<span id="resume-topic"></span>"</button>
         </div>
-        <h2>Темы ЦТ 2026</h2>
-        <div id="topic-list">Загрузка тем...</div>
+        <h2 id="main-title">Темы ЦТ 2026</h2>
+        <div id="topic-list">Подключение к базе данных...</div>
     </div>
 
     <div id="screen-quiz" class="screen">
@@ -186,6 +189,7 @@
     let currentTest = null;
     let selectedOption = null;
     const tg = window.Telegram.WebApp;
+    tg.ready(); // Сообщаем Telegram, что приложение готово
     tg.expand();
 
     function switchTab(screenId) {
@@ -200,18 +204,18 @@
     function checkResume() {
         const saved = localStorage.getItem('active_test');
         if (saved) {
-            const data = JSON.parse(saved);
-            document.getElementById('resume-topic').innerText = data.topic;
-            document.getElementById('resume-container').style.display = 'block';
+            try {
+                const data = JSON.parse(saved);
+                document.getElementById('resume-topic').innerText = data.topic;
+                document.getElementById('resume-container').style.display = 'block';
+            } catch(e) { localStorage.removeItem('active_test'); }
         } else {
             document.getElementById('resume-container').style.display = 'none';
         }
     }
 
     function renderTopics() {
-        // Защита: если база еще не загрузилась, выходим
         if (typeof database === 'undefined') return;
-        
         const list = document.getElementById('topic-list');
         list.innerHTML = '';
         Object.keys(database).forEach(topic => {
@@ -258,7 +262,7 @@
         const optContainer = document.getElementById('options-container');
         const inputField = document.getElementById('user-answer');
         
-        if (task.options) {
+        if (task.options && task.options.length > 0) {
             inputField.style.display = 'none';
             optContainer.style.display = 'grid';
             optContainer.innerHTML = '';
@@ -288,7 +292,7 @@
         const btn = document.getElementById('submit-btn');
         btn.disabled = true;
 
-        if (userVal == task.answer) {
+        if (String(userVal).toLowerCase() == String(task.answer).toLowerCase()) {
             currentTest.correct++;
             btn.classList.add('correct-bg');
             btn.innerText = "Правильно!";
@@ -309,16 +313,20 @@
             localStorage.setItem('active_test', JSON.stringify(currentTest));
             renderTask();
         } else {
-            const stats = JSON.parse(localStorage.getItem('stats') || '{}');
-            const topic = currentTest.topic;
-            if (!stats[topic]) stats[topic] = { solved: 0, total: 0 };
-            stats[topic].solved += currentTest.correct;
-            stats[topic].total += currentTest.tasks.length;
-            localStorage.setItem('stats', JSON.stringify(stats));
-            localStorage.removeItem('active_test');
-            alert(`Тест завершен!`);
-            switchTab('stats');
+            saveToStats();
         }
+    }
+
+    function saveToStats() {
+        const stats = JSON.parse(localStorage.getItem('stats') || '{}');
+        const topic = currentTest.topic;
+        if (!stats[topic]) stats[topic] = { solved: 0, total: 0 };
+        stats[topic].solved += currentTest.correct;
+        stats[topic].total += currentTest.tasks.length;
+        localStorage.setItem('stats', JSON.stringify(stats));
+        localStorage.removeItem('active_test');
+        alert(`Тест по теме ${topic} завершен!`);
+        switchTab('stats');
     }
 
     function renderStats() {
@@ -339,21 +347,18 @@
         }).join('');
     }
 
-    // Запуск приложения: ждем базу данных
-    window.onload = () => {
-        let attempts = 0;
-        const checkDB = setInterval(() => {
-            if (typeof database !== 'undefined') {
-                renderTopics();
-                checkResume();
-                clearInterval(checkDB);
-            } else if (attempts > 50) { // Если за 5 сек не загрузилось
-                document.getElementById('topic-list').innerText = "Ошибка загрузки базы.";
-                clearInterval(checkDB);
-            }
-            attempts++;
-        }, 100);
-    };
+    // Критическая правка загрузки:
+    function init() {
+        if (typeof database !== 'undefined') {
+            renderTopics();
+            checkResume();
+        } else {
+            // Если база не загрузилась за 3 сек, пробуем еще раз
+            setTimeout(init, 500);
+        }
+    }
+
+    window.addEventListener('load', init);
 </script>
 </body>
 </html>
