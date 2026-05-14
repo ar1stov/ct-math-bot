@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Математика ЦТ 2026</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="database.js" defer></script>
+    <script src="database.js" defer></script> 
+    
     <style>
-        /* ФИКСИРОВАННЫЕ ЦВЕТА (не зависят от темы телефона) */
         :root {
             --bg-color: #f0f2f5;
             --card-bg: #ffffff;
@@ -36,9 +36,6 @@
             padding: 15px 15px 80px 15px;
         }
 
-        h2 { color: var(--text-main); margin-top: 10px; }
-
-        /* Таббар (нижнее меню) */
         .tab-bar {
             position: fixed;
             bottom: 0;
@@ -61,14 +58,12 @@
             border: none;
             color: var(--text-secondary);
             font-size: 11px;
-            cursor: pointer;
             width: 50%;
         }
 
         .tab-item.active { color: var(--primary); }
         .tab-icon { font-size: 22px; margin-bottom: 4px; }
 
-        /* Карточки тем */
         .topic-card {
             background: var(--card-bg);
             padding: 20px;
@@ -77,12 +72,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer;
             font-weight: 600;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        /* Баннер продолжения теста */
         .resume-banner {
             background: #e7f3ff;
             border: 1px solid var(--primary);
@@ -92,7 +85,6 @@
             display: none;
         }
 
-        /* Экран теста */
         .screen { display: none; }
         .screen.active { display: block; }
 
@@ -110,7 +102,6 @@
             border-radius: 12px; 
             border: 2px solid transparent; 
             color: var(--text-main);
-            font-weight: 500;
         }
         .opt-btn.selected { border-color: var(--primary); background: #e7f3ff; }
 
@@ -121,7 +112,6 @@
             border-radius: 12px;
             margin-bottom: 15px;
             box-sizing: border-box;
-            font-size: 16px;
         }
 
         .main-btn {
@@ -132,67 +122,55 @@
             border: none;
             border-radius: 14px;
             font-weight: 600;
-            font-size: 16px;
         }
 
         .correct-bg { background-color: var(--success) !important; }
         .wrong-bg { background-color: var(--error) !important; }
 
-        /* Статистика */
         .stat-item {
             background: white;
             padding: 15px;
             border-radius: 12px;
             margin-bottom: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
         }
         .progress-bg { background: #e5e5ea; height: 8px; border-radius: 4px; margin-top: 8px; overflow: hidden; }
-        .progress-fill { background: var(--success); height: 100%; width: 0%; transition: 0.5s; }
+        .progress-fill { background: var(--success); height: 100%; transition: 0.5s; }
     </style>
 </head>
 <body>
 
 <div class="content-area">
-    <!-- ВКЛАДКА: ТЕСТЫ -->
     <div id="screen-tests" class="screen active">
         <div id="resume-container" class="resume-banner">
-            <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: 500;">У тебя есть незаконченный тест!</p>
-            <button class="main-btn" style="padding: 10px; font-size: 14px;" onclick="resumeTest()">Продолжить тему "<span id="resume-topic"></span>"</button>
+            <p style="margin: 0 0 10px 0;">У тебя есть незаконченный тест!</p>
+            <button class="main-btn" onclick="resumeTest()">Продолжить "<span id="resume-topic"></span>"</button>
         </div>
         <h2>Темы ЦТ 2026</h2>
-        <div id="topic-list"></div>
+        <div id="topic-list">Загрузка тем...</div>
     </div>
 
-    <!-- ЭКРАН ТЕСТА (СКРЫТ ПО УМОЛЧАНИЮ) -->
     <div id="screen-quiz" class="screen">
-        <div style="display:flex; justify-content: space-between; margin-bottom:15px; color:var(--text-secondary); font-size: 14px;">
+        <div style="display:flex; justify-content: space-between; margin-bottom:15px; color:var(--text-secondary);">
             <span id="q-topic-title">Тема</span>
             <span id="q-progress">0 / 0</span>
         </div>
         <div class="image-container"><img id="q-img" src=""></div>
-        
         <div id="options-container" class="options-grid"></div>
         <input type="text" id="user-answer" placeholder="Введите ответ">
-        
         <div id="wrong-hint" style="color:var(--error); text-align:center; display:none; margin-bottom:15px; font-weight:bold;"></div>
-        
         <button class="main-btn" id="submit-btn" onclick="handleCheck()">Ответить</button>
-
         <div id="solution-section" style="display:none; margin-top:20px; border-top: 1px dashed #ccc; padding-top:20px;">
-            <p style="font-weight: 600; margin-bottom: 10px;">Разбор задания:</p>
             <div class="image-container"><img id="s-img" src=""></div>
-            <button class="main-btn" style="background:var(--success);" id="next-btn" onclick="handleNext()">Далее</button>
+            <button class="main-btn" style="background:var(--success);" onclick="handleNext()">Далее</button>
         </div>
     </div>
 
-    <!-- ВКЛАДКА: СТАТИСТИКА -->
     <div id="screen-stats" class="screen">
         <h2>Твои успехи</h2>
         <div id="stats-container"></div>
     </div>
 </div>
 
-<!-- НИЖНЯЯ ПАНЕЛЬ -->
 <nav class="tab-bar">
     <button class="tab-item active" id="tab-tests" onclick="switchTab('tests')">
         <span class="tab-icon">📖</span>
@@ -213,27 +191,27 @@
     function switchTab(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-        
         document.getElementById('screen-' + screenId).classList.add('active');
         document.getElementById('tab-' + screenId).classList.add('active');
-
         if(screenId === 'stats') renderStats();
-        if(screenId === 'tests') checkResume();
+        if(screenId === 'tests') { renderTopics(); checkResume(); }
     }
 
     function checkResume() {
         const saved = localStorage.getItem('active_test');
-        const banner = document.getElementById('resume-container');
         if (saved) {
             const data = JSON.parse(saved);
             document.getElementById('resume-topic').innerText = data.topic;
-            banner.style.display = 'block';
+            document.getElementById('resume-container').style.display = 'block';
         } else {
-            banner.style.display = 'none';
+            document.getElementById('resume-container').style.display = 'none';
         }
     }
 
     function renderTopics() {
+        // Защита: если база еще не загрузилась, выходим
+        if (typeof database === 'undefined') return;
+        
         const list = document.getElementById('topic-list');
         list.innerHTML = '';
         Object.keys(database).forEach(topic => {
@@ -247,17 +225,13 @@
 
     function startNewTest(topic) {
         currentTest = { topic: topic, tasks: database[topic], idx: 0, correct: 0 };
-        saveProgress();
+        localStorage.setItem('active_test', JSON.stringify(currentTest));
         openQuiz();
     }
 
     function resumeTest() {
         currentTest = JSON.parse(localStorage.getItem('active_test'));
         openQuiz();
-    }
-
-    function saveProgress() {
-        localStorage.setItem('active_test', JSON.stringify(currentTest));
     }
 
     function openQuiz() {
@@ -311,7 +285,6 @@
         const task = currentTest.tasks[currentTest.idx];
         const userVal = task.options ? selectedOption : document.getElementById('user-answer').value.trim();
         if (!userVal) return;
-
         const btn = document.getElementById('submit-btn');
         btn.disabled = true;
 
@@ -323,7 +296,7 @@
         } else {
             btn.classList.add('wrong-bg');
             btn.innerText = "Неверно";
-            document.getElementById('wrong-hint').innerText = `Правильный ответ: ${task.answer}`;
+            document.getElementById('wrong-hint').innerText = `Ответ: ${task.answer}`;
             document.getElementById('wrong-hint').style.display = 'block';
             tg.HapticFeedback.notificationOccurred('error');
         }
@@ -333,32 +306,23 @@
     function handleNext() {
         currentTest.idx++;
         if (currentTest.idx < currentTest.tasks.length) {
-            saveProgress();
+            localStorage.setItem('active_test', JSON.stringify(currentTest));
             renderTask();
         } else {
-            finishTest();
+            const stats = JSON.parse(localStorage.getItem('stats') || '{}');
+            const topic = currentTest.topic;
+            if (!stats[topic]) stats[topic] = { solved: 0, total: 0 };
+            stats[topic].solved += currentTest.correct;
+            stats[topic].total += currentTest.tasks.length;
+            localStorage.setItem('stats', JSON.stringify(stats));
+            localStorage.removeItem('active_test');
+            alert(`Тест завершен!`);
+            switchTab('stats');
         }
     }
 
-    function finishTest() {
-        const stats = JSON.parse(localStorage.getItem('stats') || '{}');
-        const topic = currentTest.topic;
-        if (!stats[topic]) stats[topic] = { solved: 0, total: 0 };
-        stats[topic].solved += currentTest.correct;
-        stats[topic].total += currentTest.tasks.length;
-        localStorage.setItem('stats', JSON.stringify(stats));
-
-        localStorage.removeItem('active_test');
-        
-        // Сначала отрисовываем темы, чтобы экран не был пустым
-        renderTopics(); 
-        
-        alert(`Тест завершен! Результат: ${currentTest.correct} из ${currentTest.tasks.length}`);
-        switchTab('stats');
-    }
-    
-
     function renderStats() {
+        if (typeof database === 'undefined') return;
         const container = document.getElementById('stats-container');
         const stats = JSON.parse(localStorage.getItem('stats') || '{}');
         container.innerHTML = Object.keys(database).map(topic => {
@@ -367,17 +331,29 @@
             return `
                 <div class="stat-item">
                     <div style="display:flex; justify-content:space-between; font-weight:600;">
-                        <span>${topic}</span>
-                        <span style="color:var(--primary)">${percent}%</span>
+                        <span>${topic}</span><span>${percent}%</span>
                     </div>
                     <div class="progress-bg"><div class="progress-fill" style="width:${percent}%"></div></div>
-                    <div style="font-size:12px; color:var(--text-secondary); margin-top:8px">Решено верно: ${data.solved} из ${data.total}</div>
                 </div>
             `;
         }).join('');
     }
 
-    window.onload = () => { renderTopics(); checkResume(); };
+    // Запуск приложения: ждем базу данных
+    window.onload = () => {
+        let attempts = 0;
+        const checkDB = setInterval(() => {
+            if (typeof database !== 'undefined') {
+                renderTopics();
+                checkResume();
+                clearInterval(checkDB);
+            } else if (attempts > 50) { // Если за 5 сек не загрузилось
+                document.getElementById('topic-list').innerText = "Ошибка загрузки базы.";
+                clearInterval(checkDB);
+            }
+            attempts++;
+        }, 100);
+    };
 </script>
 </body>
 </html>
