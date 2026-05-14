@@ -18,7 +18,11 @@ const database = {
         "type": "flat",
         "topics": {
             "Механика": [
-                { question: "img/phys/mech_1.png", solution: "img/phys/mech_sol1.png", answer: "10" }
+                {
+                    "question": "https://i.imgur.com/42M4oBy.png",
+                    "solution": "https://i.imgur.com/7xYxTS5.png",
+                    "answer": "56"
+                }
             ],
             "Электричество": []
         }
