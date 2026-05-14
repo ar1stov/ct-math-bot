@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Тренажер ЦТ 2026</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="database.js?v=6.0"></script> 
+    <script src="database.js?v=7.0"></script> 
 
     <style>
-        /* (Тут остаются твои стили из предыдущей версии) */
         :root { --bg-color: #f2f2f7; --card-bg: #ffffff; --text-main: #1c1c1e; --text-secondary: #8e8e93; --primary: #007aff; --success: #34c759; --error: #ff3b30; --border: #d1d1d6; }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; height: 100vh; overflow: hidden; }
         .content-area { flex: 1; overflow-y: auto; padding: 20px 16px 100px 16px; }
@@ -23,20 +22,25 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .image-container img { width: 100%; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e5e5ea; background: white; }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        .opt-btn { background: #ffffff; padding: 16px; border-radius: 14px; border: 2.5px solid #e5e5ea; font-size: 16px; font-weight: 600; }
+        .opt-btn { background: #ffffff; padding: 16px; border-radius: 14px; border: 2.5px solid #e5e5ea; font-size: 16px; font-weight: 600; cursor: pointer; }
         .opt-btn.selected { border-color: var(--primary); background: #e7f3ff; }
         input[type="text"] { width: 100%; padding: 16px; border: 2.5px solid #e5e5ea; border-radius: 14px; margin-bottom: 15px; font-size: 17px; box-sizing: border-box; }
-        .main-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; }
+        .main-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; cursor: pointer; }
         .correct-bg { background-color: var(--success) !important; }
         .wrong-bg { background-color: var(--error) !important; }
         .stats-acc { background: white; border-radius: 16px; margin-bottom: 12px; overflow: hidden; border: 0.5px solid var(--border); }
         .stats-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .stats-body { display: none; padding: 0 20px 16px 20px; border-top: 0.5px solid #f2f2f7; }
+        .stats-body { display: none; padding: 16px 20px; border-top: 0.5px solid #f2f2f7; }
         .stats-acc.open .stats-body { display: block; }
         .arrow { width: 22px; height: 22px; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
         .stats-acc.open .arrow { transform: rotate(180deg); }
         .progress-bg { background: #e5e5ea; height: 8px; border-radius: 4px; margin: 6px 0 12px 0; overflow: hidden; }
         .progress-fill { background: var(--success); height: 100%; transition: 1s ease-out; }
+        
+        .global-test-btn {
+            background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);
+            color: #d1004a; border: none; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(254, 207, 239, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -75,17 +79,25 @@
     tg.ready();
     tg.expand();
 
-    // Глобальное состояние
     let state = { sub: null, sec: null, top: null, quiz: null, selected: null };
     let cloudData = { stats: {}, activeTest: null };
 
-    // --- СИНХРОНИЗАЦИЯ С ОБЛАКОМ ---
+    // Утилита для рандома
+    function shuffle(array) {
+        let arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
     async function syncFromCloud() {
         return new Promise((resolve) => {
-            tg.CloudStorage.getItems(['user_stats_v6', 'active_test_v6'], (err, values) => {
+            tg.CloudStorage.getItems(['user_stats_v7', 'active_test_v7'], (err, values) => {
                 if (!err) {
-                    if (values.user_stats_v6) cloudData.stats = JSON.parse(values.user_stats_v6);
-                    if (values.active_test_v6) cloudData.activeTest = JSON.parse(values.active_test_v6);
+                    if (values.user_stats_v7) cloudData.stats = JSON.parse(values.user_stats_v7);
+                    if (values.active_test_v7) cloudData.activeTest = JSON.parse(values.active_test_v7);
                 }
                 resolve();
             });
@@ -96,7 +108,6 @@
         tg.CloudStorage.setItem(key, JSON.stringify(data));
     }
 
-    // --- НАВИГАЦИЯ ---
     function switchTab(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
@@ -131,7 +142,8 @@
 
     function showSections(sections) {
         const list = document.getElementById('section-list');
-        list.innerHTML = '';
+        // Кнопка глобального теста (Идея 5)
+        list.innerHTML = `<button class="main-btn global-test-btn" onclick="startGlobalTest('${state.sub}')">🔥 Полный тест по предмету</button>`;
         document.getElementById('section-title').innerText = state.sub;
         Object.keys(sections).forEach(sec => {
             list.appendChild(createCard(sec, () => {
@@ -145,6 +157,11 @@
     function showTopics(topics, title) {
         const list = document.getElementById('topic-list');
         list.innerHTML = '';
+        
+        if (database[state.sub].type === 'flat') {
+            list.innerHTML = `<button class="main-btn global-test-btn" onclick="startGlobalTest('${state.sub}')">🔥 Полный тест по предмету</button>`;
+        }
+
         document.getElementById('topic-title').innerText = title;
         document.getElementById('topic-back-btn').onclick = () => {
             if (database[state.sub].type === 'nested') showSections(database[state.sub].sections);
@@ -152,9 +169,8 @@
         };
 
         Object.keys(topics).forEach(top => {
-            // Проверка, есть ли незавершенный тест по этой теме
             let suffix = "";
-            if (cloudData.activeTest && cloudData.activeTest.top === top) {
+            if (cloudData.activeTest && !cloudData.activeTest.isGlobal && cloudData.activeTest.top === top) {
                 suffix = " <span style='color:var(--primary); font-size:12px;'>(продолжить)</span>";
             }
             const card = createCard(top, () => checkResume(top, topics[top]));
@@ -172,30 +188,77 @@
         return div;
     }
 
-    // --- ЛОГИКА ТЕСТА ---
+    // Извлечение нерешенных задач
+    function getFreshTasks(topicName, tasks, limit) {
+        const stats = cloudData.stats[topicName] || {};
+        const solvedIds = stats.solvedIds || []; // Массив URL решенных картинок
+        
+        // Фильтруем (Идея 2)
+        let fresh = tasks.filter(t => !solvedIds.includes(t.question)).map(t => ({...t, topicOrigin: topicName}));
+        return shuffle(fresh).slice(0, limit);
+    }
+
+    // --- ГЛОБАЛЬНЫЙ ТЕСТ (Идея 5) ---
+    function startGlobalTest(subName) {
+        if (cloudData.activeTest && cloudData.activeTest.isGlobal && cloudData.activeTest.sub === subName) {
+            return tg.showConfirm(`У вас есть незаконченный полный тест. Продолжить?`, (ok) => {
+                if (ok) {
+                    state.top = cloudData.activeTest.top;
+                    state.quiz = cloudData.activeTest;
+                    switchTab('quiz'); renderTask();
+                } else {
+                    generateGlobalTest(subName);
+                }
+            });
+        }
+        generateGlobalTest(subName);
+    }
+
+    function generateGlobalTest(subName) {
+        let allTasks = [];
+        const data = database[subName];
+        
+        if (data.type === 'nested') {
+            Object.values(data.sections).forEach(sec => {
+                Object.keys(sec).forEach(top => allTasks.push(...getFreshTasks(top, sec[top], 7)));
+            });
+        } else {
+            Object.keys(data.topics).forEach(top => allTasks.push(...getFreshTasks(top, data.topics[top], 7)));
+        }
+
+        if (allTasks.length === 0) return alert("Вы решили все задания по этому предмету! Сбросьте статистику.");
+        
+        // Перемешиваем всё и обрезаем до 30 (Идея 5)
+        allTasks = shuffle(allTasks).slice(0, 30);
+        
+        state.top = "Полный тест: " + subName;
+        state.quiz = { top: state.top, sub: subName, idx: 0, correct: 0, tasks: allTasks, solvedTasks: [], isGlobal: true };
+        switchTab('quiz'); renderTask();
+    }
+
+    // --- ОБЫЧНЫЙ ТЕСТ (Идея 6) ---
     function checkResume(topicName, tasks) {
-        if (cloudData.activeTest && cloudData.activeTest.top === topicName) {
-            tg.showConfirm(`У вас есть сохраненный прогресс по теме "${topicName}". Продолжить?`, (ok) => {
+        if (cloudData.activeTest && !cloudData.activeTest.isGlobal && cloudData.activeTest.top === topicName) {
+            tg.showConfirm(`Продолжить сохраненный тест?`, (ok) => {
                 if (ok) {
                     state.top = topicName;
                     state.quiz = cloudData.activeTest;
-                    switchTab('quiz');
-                    renderTask();
-                } else {
-                    startNewQuiz(topicName, tasks);
-                }
+                    switchTab('quiz'); renderTask();
+                } else startNewQuiz(topicName, tasks);
             });
-        } else {
-            startNewQuiz(topicName, tasks);
-        }
+        } else startNewQuiz(topicName, tasks);
     }
 
     function startNewQuiz(name, tasks) {
         if (!tasks || tasks.length === 0) return alert("Задания скоро появятся!");
+        
+        // Лимит 15 вопросов для темы (Идея 6)
+        let freshTasks = getFreshTasks(name, tasks, 15);
+        if (freshTasks.length === 0) return alert("Вы уже верно решили все задания в этой теме! Зайдите в статистику и сбросьте прогресс.");
+
         state.top = name;
-        state.quiz = { top: name, sub: state.sub, sec: state.sec, idx: 0, correct: 0, tasks: tasks };
-        switchTab('quiz');
-        renderTask();
+        state.quiz = { top: name, sub: state.sub, sec: state.sec, idx: 0, correct: 0, tasks: freshTasks, solvedTasks: [], isGlobal: false };
+        switchTab('quiz'); renderTask();
     }
 
     function renderTask() {
@@ -240,6 +303,9 @@
 
         if (String(val).toLowerCase().replace(',','.') == String(task.answer).toLowerCase().replace(',','.')) {
             state.quiz.correct++;
+            // Запоминаем верно решенный вопрос, чтобы исключить его потом (Идея 2)
+            state.quiz.solvedTasks.push({ topic: task.topicOrigin, questionId: task.question });
+            
             btn.classList.add('correct-bg'); btn.innerText = "Верно!";
             tg.HapticFeedback.notificationOccurred('success');
         } else {
@@ -254,38 +320,66 @@
     function handleNext() {
         state.quiz.idx++;
         if (state.quiz.idx < state.quiz.tasks.length) {
-            // Сохраняем промежуточный прогресс в облако
             cloudData.activeTest = state.quiz;
-            saveToCloud('active_test_v6', cloudData.activeTest);
+            saveToCloud('active_test_v7', cloudData.activeTest);
             renderTask();
-        } else {
-            finishQuiz();
-        }
+        } else finishQuiz();
     }
 
     function finishQuiz() {
-        const key = state.top;
-        if (!cloudData.stats[key]) cloudData.stats[key] = { solved: 0, total: 0 };
-        cloudData.stats[key].solved += state.quiz.correct;
-        cloudData.stats[key].total += state.quiz.tasks.length;
+        // Добавляем к общему количеству "попыток"
+        state.quiz.tasks.forEach(task => {
+            if (!cloudData.stats[task.topicOrigin]) cloudData.stats[task.topicOrigin] = { solved: 0, total: 0, solvedIds: [] };
+            cloudData.stats[task.topicOrigin].total++;
+        });
+
+        // Добавляем верные решения
+        state.quiz.solvedTasks.forEach(st => {
+            if (!cloudData.stats[st.topic].solvedIds) cloudData.stats[st.topic].solvedIds = [];
+            cloudData.stats[st.topic].solved++;
+            if (!cloudData.stats[st.topic].solvedIds.includes(st.questionId)) {
+                cloudData.stats[st.topic].solvedIds.push(st.questionId);
+            }
+        });
         
-        // Очищаем активный тест, так как он закончен
         cloudData.activeTest = null;
-        
-        // Сохраняем всё в облако
-        saveToCloud('user_stats_v6', cloudData.stats);
-        tg.CloudStorage.removeItem('active_test_v6');
+        saveToCloud('user_stats_v7', cloudData.stats);
+        tg.CloudStorage.removeItem('active_test_v7');
 
         alert(`Тест завершен! Решено: ${state.quiz.correct} из ${state.quiz.tasks.length}`);
         goToHome();
     }
 
     function confirmExit() {
-        tg.showConfirm("Выйти? Прогресс будет сохранен, и вы сможете продолжить позже.", (ok) => {
+        tg.showConfirm("Сохранить прогресс и выйти?", (ok) => {
             if (ok) {
                 cloudData.activeTest = state.quiz;
-                saveToCloud('active_test_v6', cloudData.activeTest);
+                saveToCloud('active_test_v7', cloudData.activeTest);
                 goToHome();
+            }
+        });
+    }
+
+    // --- СБРОС СТАТИСТИКИ (Идея 1) ---
+    function resetSubjectStats(subName) {
+        tg.showConfirm(`Вы уверены, что хотите сбросить ВЕСЬ прогресс по предмету "${subName}"? Вам снова станут доступны все задания.`, (ok) => {
+            if(ok) {
+                let topics = [];
+                if (database[subName].type === 'nested') {
+                    Object.values(database[subName].sections).forEach(sec => topics.push(...Object.keys(sec)));
+                } else topics = Object.keys(database[subName].topics);
+                
+                topics.forEach(t => { delete cloudData.stats[t]; });
+                
+                // Если активный тест был по этому предмету — удаляем
+                if(cloudData.activeTest && cloudData.activeTest.sub === subName) {
+                    cloudData.activeTest = null;
+                    tg.CloudStorage.removeItem('active_test_v7');
+                }
+
+                saveToCloud('user_stats_v7', cloudData.stats);
+                renderStats();
+                tg.HapticFeedback.notificationOccurred('success');
             }
         });
     }
@@ -302,9 +396,7 @@
             let topics = [];
             if (database[sub].type === 'nested') {
                 Object.values(database[sub].sections).forEach(sec => topics.push(...Object.keys(sec)));
-            } else {
-                topics = Object.keys(database[sub].topics);
-            }
+            } else topics = Object.keys(database[sub].topics);
 
             let sSum = 0, tSum = 0;
             topics.forEach(t => { if(cloudData.stats[t]) { sSum += cloudData.stats[t].solved; tSum += cloudData.stats[t].total; }});
@@ -314,24 +406,24 @@
                 <div class="stats-header" onclick="this.parentElement.classList.toggle('open')">
                     <div style="display:flex; flex-direction:column;">
                         <span style="font-weight:700; font-size:17px;">${sub}</span>
-                        <span style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Прогресс: ${totalP}%</span>
+                        <span style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Верных ответов: ${sSum} (${totalP}%)</span>
                     </div>
                     <div class="arrow">${arrowSvg}</div>
                 </div>
                 <div class="stats-body">
+                    <button class="opt-btn" style="padding:10px; font-size:14px; border:1px solid var(--error); color:var(--error); margin-bottom:15px; width:100%; background:transparent;" onclick="resetSubjectStats('${sub}')">🔄 Сбросить прогресс</button>
                     ${topics.map(t => {
                         const s = cloudData.stats[t] || { solved: 0, total: 0 };
                         const p = s.total > 0 ? Math.round((s.solved/s.total)*100) : 0;
-                        return `<div style="margin-top:12px;"><div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px;"><span>${t}</span><span style="font-weight:600;">${p}%</span></div><div class="progress-bg"><div class="progress-fill" style="width:${p}%"></div></div></div>`;
+                        return `<div style="margin-bottom:12px;"><div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px;"><span>${t}</span><span style="font-weight:600;">${s.solved}</span></div><div class="progress-bg"><div class="progress-fill" style="width:${p}%"></div></div></div>`;
                     }).join('')}
                 </div>`;
             container.appendChild(acc);
         });
     }
 
-    // Инициализация при старте
     window.onload = async () => {
-        await syncFromCloud(); // Загружаем всё из Telegram Cloud
+        await syncFromCloud();
         showSubjects();
     };
 </script>
