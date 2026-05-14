@@ -26,5 +26,32 @@ const database = {
     "Русский язык": {
         "type": "flat",
         "topics": { "Орфография": [], "Пунктуация": [] }
-    }
+    },
+   "География": {
+        "type": "flat",
+        "topics": {
+             "Физическая география": [
+            {
+                "question": "img/geo/phys_q1.png",
+                "solution": "img/geo/phys_sol1.png",
+                "options": ["Эверест", "Килиманджаро", "Эльбрус", "Монблан"],
+                "answer": "Эверест"
+            },
+            {
+                "question": "img/geo/phys_q2.png",
+                "solution": "img/geo/phys_sol2.png",
+                "options": ["Тихий", "Атлантический", "Индийский", "Северный Ледовитый"],
+                "answer": "Тихий"
+            }
+        ],
+             "Социально-экономическая география": [
+            {
+                "question": "img/geo/econ_q1.png",
+                "solution": "img/geo/econ_sol1.png",
+                "options": ["Китай", "Индия", "США", "Индонезия"],
+                "answer": "Индия"
+            }
+        ]
+        }
+    },
 };
