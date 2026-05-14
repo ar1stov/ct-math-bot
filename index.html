@@ -12,48 +12,30 @@
     <style>
         :root { --bg-color: #f2f2f7; --card-bg: #ffffff; --text-main: #1c1c1e; --text-secondary: #8e8e93; --primary: #007aff; --success: #34c759; --error: #ff3b30; --border: #d1d1d6; }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        
         .content-area { flex: 1; overflow-y: auto; padding: 20px 16px 100px 16px; }
-        
         .tab-bar { position: fixed; bottom: 0; width: 100%; height: 70px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(15px); border-top: 0.5px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 1000; }
         .tab-item { display: flex; flex-direction: column; align-items: center; background: none; border: none; color: var(--text-secondary); font-size: 11px; width: 50%; cursor: pointer; }
         .tab-item.active { color: var(--primary); }
-        .tab-icon { font-size: 24px; margin-bottom: 4px; }
-
-        .card { background: var(--card-bg); padding: 18px 20px; border-radius: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.04); cursor: pointer; transition: transform 0.1s; }
-        .card:active { transform: scale(0.98); }
-        
+        .card { background: var(--card-bg); padding: 18px 20px; border-radius: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.04); cursor: pointer; }
         .back-btn { color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; font-weight: 500; cursor: pointer; }
         .screen { display: none; }
         .screen.active { display: block; animation: fadeIn 0.2s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         .image-container img { width: 100%; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e5e5ea; background: white; }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
         .opt-btn { background: #ffffff; padding: 16px; border-radius: 14px; border: 2.5px solid #e5e5ea; font-size: 16px; font-weight: 600; cursor: pointer; }
         .opt-btn.selected { border-color: var(--primary); background: #e7f3ff; }
-        
         input[type="text"] { width: 100%; padding: 16px; border: 2.5px solid #e5e5ea; border-radius: 14px; margin-bottom: 15px; font-size: 17px; box-sizing: border-box; outline: none; }
-        input[type="text"]:focus { border-color: var(--primary); }
-        
         .main-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; cursor: pointer; }
         .correct-bg { background-color: var(--success) !important; }
         .wrong-bg { background-color: var(--error) !important; }
-
         .stats-acc { background: white; border-radius: 16px; margin-bottom: 12px; overflow: hidden; border: 0.5px solid var(--border); }
         .stats-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .stats-body { display: none; padding: 16px 20px; border-top: 0.5px solid #f2f2f7; }
         .stats-acc.open .stats-body { display: block; }
-        .arrow { width: 22px; height: 22px; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
-        .stats-acc.open .arrow { transform: rotate(180deg); }
-        
         .progress-bg { background: #e5e5ea; height: 8px; border-radius: 4px; margin: 6px 0 12px 0; overflow: hidden; }
         .progress-fill { background: var(--success); height: 100%; transition: 1s ease-out; }
-        
-        .global-test-btn {
-            background: linear-gradient(135deg, #6e8efb 0%, #a777e3 100%);
-            color: white; border: none; margin-bottom: 15px; font-size: 16px;
-        }
+        .global-test-btn { background: linear-gradient(135deg, #6e8efb 0%, #a777e3 100%); color: white; border: none; margin-bottom: 15px; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -92,14 +74,16 @@
     tg.ready();
     tg.expand();
 
+    // --- НАСТРОЙКИ FIREBASE ---
+    // Вставь свои данные из консоли Firebase сюда
     const firebaseConfig = {
-          apiKey: "AIzaSyAyi5tw9ImFG-mGTBqnaD9BeHcDO6kWJtE",
-          authDomain: "ct-2026-stats.firebaseapp.com",
-          projectId: "ct-2026-stats",
-          storageBucket: "ct-2026-stats.firebasestorage.app",
-          messagingSenderId: "32583263801",
-          appId: "1:32583263801:web:07e1094d0fb228d4218fe8",
-          measurementId: "G-9MN6MPTKWJ"
+        apiKey: "AIzaSyAyi5tw9ImFG-mGTBqnaD9BeHcDO6kWJtE",
+        authDomain: "ct-2026-stats.firebaseapp.com",
+        projectId: "ct-2026-stats",
+        storageBucket: "ct-2026-stats.firebasestorage.app",
+        messagingSenderId: "32583263801",
+        appId: "1:32583263801:web:07e1094d0fb228d4218fe8",
+        measurementId: "G-9MN6MPTKWJ"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -108,48 +92,38 @@
     let state = { sub: null, sec: null, top: null, quiz: null, selected: null };
     let cloudData = { stats: {}, activeTest: null };
 
-    function shuffle(array) {
-        let arr = [...array];
-        for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
-        }
-        return arr;
-    }
+    // Хелперы
+    function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
     async function syncFromCloud() {
         return new Promise((resolve) => {
-            tg.CloudStorage.getItems(['user_stats_v7', 'active_test_v7'], (err, values) => {
+            tg.CloudStorage.getItems(['user_stats_v7', 'active_test_v7'], (err, val) => {
                 if (!err) {
-                    if (values.user_stats_v7) cloudData.stats = JSON.parse(values.user_stats_v7);
-                    if (values.active_test_v7) cloudData.activeTest = JSON.parse(values.active_test_v7);
+                    if (val.user_stats_v7) cloudData.stats = JSON.parse(val.user_stats_v7);
+                    if (val.active_test_v7) cloudData.activeTest = JSON.parse(val.active_test_v7);
                 }
                 resolve();
             });
         });
     }
 
-    function saveToCloud(key, data) {
-        tg.CloudStorage.setItem(key, JSON.stringify(data));
-    }
+    function saveToCloud(k, d) { tg.CloudStorage.setItem(k, JSON.stringify(d)); }
 
-    function switchTab(screenId) {
+    function switchTab(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-        document.getElementById('screen-' + screenId).classList.add('active');
-        document.getElementById('tab-' + (screenId === 'stats' ? 'stats' : 'home')).classList.add('active');
-        if(screenId === 'stats') renderStats();
+        document.getElementById('screen-' + id).classList.add('active');
+        document.getElementById('tab-' + (id === 'stats' ? 'stats' : 'home')).classList.add('active');
+        if(id === 'stats') renderStats();
     }
 
     function goToHome() {
         if (state.sub) {
-            const data = database[state.sub];
-            if (state.sec) showTopics(data.sections[state.sec], state.sec);
-            else if (data.type === 'flat') showTopics(data.topics, state.sub);
-            else showSections(data.sections);
-        } else {
-            showSubjects();
-        }
+            const d = database[state.sub];
+            if (state.sec) showTopics(d.sections[state.sec], state.sec);
+            else if (d.type === 'flat') showTopics(d.topics, state.sub);
+            else showSections(d.sections);
+        } else showSubjects();
     }
 
     function showSubjects() {
@@ -166,172 +140,114 @@
         switchTab('subjects');
     }
 
-    function showSections(sections) {
+    function showSections(secs) {
         const list = document.getElementById('section-list');
-        list.innerHTML = `<button class="main-btn global-test-btn" onclick="startGlobalTest('${state.sub}')">🔥 Сдать полный тест по предмету</button>`;
+        list.innerHTML = `<button class="main-btn global-test-btn" onclick="startGlobalTest('${state.sub}')">🔥 Полный тест по предмету</button>`;
         document.getElementById('section-title').innerText = state.sub;
-        Object.keys(sections).forEach(sec => {
-            list.appendChild(createCard(sec, () => {
-                state.sec = sec;
-                showTopics(sections[sec], sec);
-            }));
+        Object.keys(secs).forEach(sec => {
+            list.appendChild(createCard(sec, () => { state.sec = sec; showTopics(secs[sec], sec); }));
         });
         switchTab('sections');
     }
 
-    function showTopics(topics, title) {
+    function showTopics(tops, title) {
         const list = document.getElementById('topic-list');
         list.innerHTML = '';
-        
         if (database[state.sub].type === 'flat') {
-            list.innerHTML = `<button class="main-btn global-test-btn" onclick="startGlobalTest('${state.sub}')">🔥 Сдать полный тест по предмету</button>`;
+            list.innerHTML = `<button class="main-btn global-test-btn" onclick="startGlobalTest('${state.sub}')">🔥 Полный тест по предмету</button>`;
         }
-
         document.getElementById('topic-title').innerText = title;
         document.getElementById('topic-back-btn').onclick = () => {
             if (database[state.sub].type === 'nested') showSections(database[state.sub].sections);
             else showSubjects();
         };
-
-        Object.keys(topics).forEach(top => {
-            let suffix = "";
-            if (cloudData.activeTest && !cloudData.activeTest.isGlobal && cloudData.activeTest.top === top) {
-                suffix = " <small style='color:var(--primary)'>(продолжить)</small>";
-            }
-            const card = createCard(top, () => checkResume(top, topics[top]));
-            card.innerHTML = `<span>${top}${suffix}</span><span style="color:var(--primary); font-size:22px;">›</span>`;
+        Object.keys(tops).forEach(t => {
+            let resume = (cloudData.activeTest && !cloudData.activeTest.isGlobal && cloudData.activeTest.top === t) ? " <small style='color:var(--primary)'>(продолжить)</small>" : "";
+            const card = createCard(t, () => checkResume(t, tops[t]));
+            card.innerHTML = `<span>${t}${resume}</span><span style="color:var(--primary); font-size:22px;">›</span>`;
             list.appendChild(card);
         });
         switchTab('topics');
     }
 
-    function createCard(text, onClick) {
-        const div = document.createElement('div');
-        div.className = 'card';
-        div.innerHTML = `<span>${text}</span><span style="color:var(--primary); font-size:22px;">›</span>`;
-        div.onclick = onClick;
-        return div;
+    function createCard(txt, onClick) {
+        const div = document.createElement('div'); div.className = 'card';
+        div.innerHTML = `<span>${txt}</span><span style="color:var(--primary); font-size:22px;">›</span>`;
+        div.onclick = onClick; return div;
     }
 
-    function findTasksInNested(sub, topicName) {
-        for (const sec of Object.values(database[sub].sections)) {
-            if (sec[topicName]) return sec[topicName];
-        }
-        return [];
+    function getFresh(name, tasks, lim) {
+        const solved = (cloudData.stats[name] && cloudData.stats[name].solvedIds) || [];
+        let fresh = tasks.filter(t => !solved.includes(t.question)).map(t => ({...t, topicOrigin: name}));
+        return shuffle(fresh).slice(0, lim);
     }
 
-    function getFreshTasks(topicName, tasks, limit) {
-        const stats = cloudData.stats[topicName] || {};
-        const solvedIds = stats.solvedIds || [];
-        let fresh = tasks.filter(t => !solvedIds.includes(t.question)).map(t => ({...t, topicOrigin: topicName}));
-        return shuffle(fresh).slice(0, limit);
+    function startGlobalTest(sub) {
+        if (cloudData.activeTest && cloudData.activeTest.isGlobal && cloudData.activeTest.sub === sub) {
+            tg.showConfirm("Продолжить полный тест?", (ok) => { if (ok) { state.quiz = cloudData.activeTest; switchTab('quiz'); renderTask(); } else generateGlobal(sub); });
+        } else generateGlobal(sub);
     }
 
-    // --- ГЛОБАЛЬНЫЙ ТЕСТ ---
-    function startGlobalTest(subName) {
-        if (cloudData.activeTest && cloudData.activeTest.isGlobal && cloudData.activeTest.sub === subName) {
-            tg.showConfirm("У вас есть незавершенный полный тест. Продолжить?", (ok) => {
-                if (ok) {
-                    state.top = cloudData.activeTest.top;
-                    state.quiz = cloudData.activeTest;
-                    switchTab('quiz'); renderTask();
-                } else generateGlobalTest(subName);
-            });
-        } else generateGlobalTest(subName);
-    }
-
-    function generateGlobalTest(subName) {
-        let allTasks = [];
-        const data = database[subName];
-        if (data.type === 'nested') {
-            Object.values(data.sections).forEach(sec => {
-                Object.keys(sec).forEach(top => allTasks.push(...getFreshTasks(top, sec[top], 7)));
-            });
+    function generateGlobal(sub) {
+        let all = []; const d = database[sub];
+        if (d.type === 'nested') {
+            Object.values(d.sections).forEach(sec => { Object.keys(sec).forEach(t => all.push(...getFresh(t, sec[t], 7))); });
         } else {
-            Object.keys(data.topics).forEach(top => allTasks.push(...getFreshTasks(top, data.topics[top], 7)));
+            Object.keys(d.topics).forEach(t => all.push(...getFresh(t, d.topics[t], 7)));
         }
-
-        if (allTasks.length === 0) return alert("Вы решили все доступные задания!");
-        allTasks = shuffle(allTasks).slice(0, 30);
-        
-        state.top = "Полный тест: " + subName;
-        state.quiz = { top: state.top, sub: subName, idx: 0, correct: 0, tasks: allTasks, solvedTasks: [], isGlobal: true };
+        if (all.length === 0) return alert("Все задания решены!");
+        state.quiz = { top: "Полный тест", sub: sub, idx: 0, correct: 0, tasks: shuffle(all).slice(0, 30), solvedTasks: [], isGlobal: true };
         switchTab('quiz'); renderTask();
     }
 
-    // --- ОБЫЧНЫЙ ТЕСТ ---
-    function checkResume(topicName, tasks) {
-        if (cloudData.activeTest && !cloudData.activeTest.isGlobal && cloudData.activeTest.top === topicName) {
-            tg.showConfirm("Продолжить тест?", (ok) => {
-                if (ok) {
-                    state.top = topicName;
-                    state.quiz = cloudData.activeTest;
-                    switchTab('quiz'); renderTask();
-                } else startNewQuiz(topicName, tasks);
-            });
-        } else startNewQuiz(topicName, tasks);
+    function checkResume(name, tasks) {
+        if (cloudData.activeTest && !cloudData.activeTest.isGlobal && cloudData.activeTest.top === name) {
+            tg.showConfirm("Продолжить тест?", (ok) => { if (ok) { state.quiz = cloudData.activeTest; switchTab('quiz'); renderTask(); } else startNew(name, tasks); });
+        } else startNew(name, tasks);
     }
 
-    function startNewQuiz(name, tasks) {
-        let freshTasks = getFreshTasks(name, tasks, 15);
-        if (freshTasks.length === 0) return alert("Все задания темы решены! Сбросьте статистику.");
-
-        state.top = name;
-        state.quiz = { top: name, sub: state.sub, idx: 0, correct: 0, tasks: freshTasks, solvedTasks: [], isGlobal: false };
+    function startNew(name, tasks) {
+        let fresh = getFresh(name, tasks, 15);
+        if (fresh.length === 0) return alert("Все задания темы решены!");
+        state.quiz = { top: name, sub: state.sub, idx: 0, correct: 0, tasks: fresh, solvedTasks: [], isGlobal: false };
         switchTab('quiz'); renderTask();
     }
 
     function renderTask() {
-        const task = state.quiz.tasks[state.quiz.idx];
-        state.selected = null;
-        document.getElementById('q-header').innerText = state.top;
+        const t = state.quiz.tasks[state.quiz.idx]; state.selected = null;
+        document.getElementById('q-header').innerText = state.quiz.top;
         document.getElementById('q-progress').innerText = `${state.quiz.idx + 1} / ${state.quiz.tasks.length}`;
-        document.getElementById('q-img').src = task.question;
-        document.getElementById('s-img').src = task.solution;
+        document.getElementById('q-img').src = t.question;
+        document.getElementById('s-img').src = t.solution;
         document.getElementById('solution-section').style.display = 'none';
         document.getElementById('wrong-hint').style.display = 'none';
-        
-        const btn = document.getElementById('submit-btn');
-        btn.disabled = false; btn.className = 'main-btn'; btn.innerText = "Ответить";
-
+        const btn = document.getElementById('submit-btn'); btn.disabled = false; btn.className = 'main-btn'; btn.innerText = "Ответить";
         const optCont = document.getElementById('options-container');
         const input = document.getElementById('user-answer');
-        
-        if (task.options && task.options.length > 0) {
+        if (t.options && t.options.length > 0) {
             input.style.display = 'none'; optCont.style.display = 'grid'; optCont.innerHTML = '';
-            task.options.forEach(o => {
-                const b = document.createElement('button');
-                b.className = 'opt-btn'; b.innerText = o;
-                b.onclick = () => {
-                    state.selected = o;
-                    document.querySelectorAll('.opt-btn').forEach(el => el.classList.remove('selected'));
-                    b.classList.add('selected');
-                };
+            t.options.forEach(o => {
+                const b = document.createElement('button'); b.className = 'opt-btn'; b.innerText = o;
+                b.onclick = () => { state.selected = o; document.querySelectorAll('.opt-btn').forEach(el => el.classList.remove('selected')); b.classList.add('selected'); };
                 optCont.appendChild(b);
             });
-        } else {
-            optCont.style.display = 'none'; input.style.display = 'block'; input.value = '';
-        }
+        } else { optCont.style.display = 'none'; input.style.display = 'block'; input.value = ''; }
     }
 
     function handleCheck() {
-        const task = state.quiz.tasks[state.quiz.idx];
-        const val = task.options ? state.selected : document.getElementById('user-answer').value.trim();
+        const t = state.quiz.tasks[state.quiz.idx];
+        const val = t.options ? state.selected : document.getElementById('user-answer').value.trim();
         if (!val) return;
-        
-        const btn = document.getElementById('submit-btn');
-        btn.disabled = true;
-
-        if (String(val).toLowerCase().replace(',','.') == String(task.answer).toLowerCase().replace(',','.')) {
-            state.quiz.correct++;
-            state.quiz.solvedTasks.push({ topic: task.topicOrigin, questionId: task.question });
-            btn.classList.add('correct-bg'); btn.innerText = "Верно!";
-            tg.HapticFeedback.notificationOccurred('success');
+        const btn = document.getElementById('submit-btn'); btn.disabled = true;
+        const ok = String(val).toLowerCase().replace(',','.') == String(t.answer).toLowerCase().replace(',','.');
+        if (ok) {
+            state.quiz.correct++; state.quiz.solvedTasks.push({ topic: t.topicOrigin || state.quiz.top, questionId: t.question, status: 'success' });
+            btn.classList.add('correct-bg'); btn.innerText = "Верно!"; tg.HapticFeedback.notificationOccurred('success');
         } else {
+            state.quiz.solvedTasks.push({ topic: t.topicOrigin || state.quiz.top, questionId: t.question, status: 'error' });
             btn.classList.add('wrong-bg'); btn.innerText = "Ошибка";
-            document.getElementById('wrong-hint').innerText = `Ответ: ${task.answer}`;
-            document.getElementById('wrong-hint').style.display = 'block';
-            tg.HapticFeedback.notificationOccurred('error');
+            document.getElementById('wrong-hint').innerText = `Ответ: ${t.answer}`;
+            document.getElementById('wrong-hint').style.display = 'block'; tg.HapticFeedback.notificationOccurred('error');
         }
         document.getElementById('solution-section').style.display = 'block';
     }
@@ -339,100 +255,77 @@
     function handleNext() {
         state.quiz.idx++;
         if (state.quiz.idx < state.quiz.tasks.length) {
-            cloudData.activeTest = state.quiz;
-            saveToCloud('active_test_v7', cloudData.activeTest);
-            renderTask();
+            cloudData.activeTest = state.quiz; saveToCloud('active_test_v7', cloudData.activeTest); renderTask();
         } else finishQuiz();
     }
 
     function finishQuiz() {
         state.quiz.solvedTasks.forEach(st => {
-            if (!cloudData.stats[st.topic]) cloudData.stats[st.topic] = { solvedIds: [] };
-            if (!cloudData.stats[st.topic].solvedIds.includes(st.questionId)) {
-                cloudData.stats[st.topic].solvedIds.push(st.questionId);
+            // 1. Личный прогресс
+            if (st.status === 'success') {
+                if (!cloudData.stats[st.topic]) cloudData.stats[st.topic] = { solvedIds: [] };
+                if (!cloudData.stats[st.topic].solvedIds.includes(st.questionId)) cloudData.stats[st.topic].solvedIds.push(st.questionId);
             }
+            
+            // 2. FIREBASE ТРАНЗАКЦИЯ (Для админа)
+            const cleanT = st.topic.replace(/[.#$\[\]]/g, "_");
+            const cleanS = state.quiz.sub.replace(/[.#$\[\]]/g, "_");
+            const ref = dbGlobal.ref('stats_v1/' + cleanS + '/' + cleanT);
+            
+            ref.transaction((curr) => {
+                if (curr === null) return { ok: st.status === 'success' ? 1 : 0, err: st.status === 'error' ? 1 : 0 };
+                if (st.status === 'success') curr.ok = (curr.ok || 0) + 1;
+                else curr.err = (curr.err || 0) + 1;
+                return curr;
+            });
         });
         
         cloudData.activeTest = null;
         saveToCloud('user_stats_v7', cloudData.stats);
         tg.CloudStorage.removeItem('active_test_v7');
-
-        alert(`Тест завершен! Решено: ${state.quiz.correct} из ${state.quiz.tasks.length}`);
+        alert(`Завершено! Решено: ${state.quiz.correct} из ${state.quiz.tasks.length}`);
         goToHome();
     }
 
-    function confirmExit() {
-        tg.showConfirm("Выйти? Прогресс текущего теста будет сохранен.", (ok) => {
-            if (ok) {
-                cloudData.activeTest = state.quiz;
-                saveToCloud('active_test_v7', cloudData.activeTest);
-                goToHome();
+    function confirmExit() { tg.showConfirm("Выйти? Прогресс сохранится.", (ok) => { if (ok) { cloudData.activeTest = state.quiz; saveToCloud('active_test_v7', cloudData.activeTest); goToHome(); } }); }
+
+    function resetSubjectStats(sub) {
+        tg.showConfirm(`Сбросить прогресс "${sub}"?`, (ok) => {
+            if(ok) {
+                let tops = (database[sub].type === 'nested') ? [].concat(...Object.values(database[sub].sections).map(s => Object.keys(s))) : Object.keys(database[sub].topics);
+                tops.forEach(t => { if(cloudData.stats[t]) delete cloudData.stats[t]; });
+                saveToCloud('user_stats_v7', cloudData.stats); renderStats();
             }
         });
     }
 
-    function resetSubjectStats(subName) {
-        tg.showConfirm(`Сбросить прогресс по предмету "${subName}"?`, (ok) => {
-            if(ok) {
-                let topics = (database[subName].type === 'nested') 
-                    ? [].concat(...Object.values(database[subName].sections).map(s => Object.keys(s)))
-                    : Object.keys(database[subName].topics);
-                
-                topics.forEach(t => { if(cloudData.stats[t]) delete cloudData.stats[t]; });
-                if(cloudData.activeTest && cloudData.activeTest.sub === subName) {
-                    cloudData.activeTest = null;
-                    tg.CloudStorage.removeItem('active_test_v7');
-                }
-                saveToCloud('user_stats_v7', cloudData.stats);
-                renderStats();
-            }
-        });
+    function findTasksInNested(sub, top) {
+        for(let sec in database[sub].sections) if(database[sub].sections[sec][top]) return database[sub].sections[sec][top];
+        return [];
     }
 
     function renderStats() {
-        const container = document.getElementById('stats-container');
-        container.innerHTML = '';
+        const container = document.getElementById('stats-container'); container.innerHTML = '';
         Object.keys(database).forEach(sub => {
-            const acc = document.createElement('div');
-            acc.className = 'stats-acc';
-            let topics = (database[sub].type === 'nested') 
-                ? [].concat(...Object.values(database[sub].sections).map(s => Object.keys(s)))
-                : Object.keys(database[sub].topics);
-
+            const acc = document.createElement('div'); acc.className = 'stats-acc';
+            let tops = (database[sub].type === 'nested') ? [].concat(...Object.values(database[sub].sections).map(s => Object.keys(s))) : Object.keys(database[sub].topics);
             let sSum = 0, tSum = 0;
-            topics.forEach(t => {
-                const solvedCount = cloudData.stats[t] ? cloudData.stats[t].solvedIds.length : 0;
-                const dbTasks = (database[sub].type === 'nested') ? findTasksInNested(sub, t) : database[sub].topics[t];
-                sSum += solvedCount;
-                tSum += dbTasks.length;
+            tops.forEach(t => {
+                sSum += cloudData.stats[t] ? cloudData.stats[t].solvedIds.length : 0;
+                tSum += (database[sub].type === 'nested') ? findTasksInNested(sub, t).length : database[sub].topics[t].length;
             });
-
-            acc.innerHTML = `
-                <div class="stats-header" onclick="this.parentElement.classList.toggle('open')">
-                    <div style="display:flex; flex-direction:column;">
-                        <span style="font-weight:700;">${sub}</span>
-                        <span style="font-size:12px; color:var(--text-secondary)">Решено: ${sSum} из ${tSum}</span>
-                    </div>
-                    <div class="arrow">▼</div>
-                </div>
-                <div class="stats-body">
-                    ${topics.map(t => {
-                        const solved = cloudData.stats[t] ? cloudData.stats[t].solvedIds.length : 0;
-                        const dbTasks = (database[sub].type === 'nested') ? findTasksInNested(sub, t) : database[sub].topics[t];
-                        const total = dbTasks.length;
-                        const p = total > 0 ? (solved/total)*100 : 0;
-                        return `<div style="margin-bottom:12px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>${t}</span><b>${solved}/${total}</b></div><div class="progress-bg"><div class="progress-fill" style="width:${p}%"></div></div></div>`;
-                    }).join('')}
-                    <button class="opt-btn" style="width:100%; font-size:13px; color:var(--error); border-color:#ff3b3033; background:rgba(255,59,48,0.05); margin-top:10px;" onclick="event.stopPropagation(); resetSubjectStats('${sub}')">🔄 Сбросить прогресс</button>
-                </div>`;
+            acc.innerHTML = `<div class="stats-header" onclick="this.parentElement.classList.toggle('open')"><div><span style="font-weight:700;">${sub}</span><br><span style="font-size:12px; color:var(--text-secondary)">Решено: ${sSum} из ${tSum}</span></div><div class="arrow">▼</div></div>
+                <div class="stats-body">${tops.map(t => {
+                    const s = cloudData.stats[t] ? cloudData.stats[t].solvedIds.length : 0;
+                    const all = (database[sub].type === 'nested') ? findTasksInNested(sub, t).length : database[sub].topics[t].length;
+                    const p = all > 0 ? (s/all)*100 : 0;
+                    return `<div style="margin-bottom:12px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>${t}</span><b>${s}/${all}</b></div><div class="progress-bg"><div class="progress-fill" style="width:${p}%"></div></div></div>`;
+                }).join('')}<button class="opt-btn" style="width:100%; font-size:13px; color:var(--error); border-color:#ff3b3033; background:rgba(255,59,48,0.05); margin-top:10px;" onclick="event.stopPropagation(); resetSubjectStats('${sub}')">🔄 Сбросить прогресс</button></div>`;
             container.appendChild(acc);
         });
     }
 
-    window.onload = async () => {
-        await syncFromCloud();
-        showSubjects();
-    };
+    window.onload = async () => { await syncFromCloud(); showSubjects(); };
 </script>
 </body>
 </html>
