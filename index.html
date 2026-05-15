@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Тренажер ЦТ 2026</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="database.js?v=8.0"></script>
+    <script src="database.js?v=9.0"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
 
@@ -23,8 +23,8 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .image-container img { width: 100%; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e5e5ea; background: white; }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        .opt-btn { background: #ffffff; padding: 16px; border-radius: 14px; border: 2.5px solid #e5e5ea; font-size: 16px; font-weight: 600; cursor: pointer; }
-        .opt-btn.selected { border-color: var(--primary); background: #e7f3ff; }
+        .opt-btn { background: #ffffff; padding: 16px; border-radius: 14px; border: 2.5px solid #e5e5ea; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .opt-btn.selected { border-color: var(--primary); background: #e7f3ff; transform: scale(0.98); }
         input[type="text"] { width: 100%; padding: 16px; border: 2.5px solid #e5e5ea; border-radius: 14px; margin-bottom: 15px; font-size: 17px; box-sizing: border-box; outline: none; }
         .main-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; cursor: pointer; }
         .correct-bg { background-color: var(--success) !important; }
@@ -74,7 +74,6 @@
     tg.ready();
     tg.expand();
 
-    // --- КОНФИГУРАЦИЯ FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyAyi5tw9ImFG-mGTBqnaD9BeHcDO6kWJtE",
         databaseURL: "https://ct-2026-stats-default-rtdb.europe-west1.firebasedatabase.app/",
@@ -84,7 +83,7 @@
     firebase.initializeApp(firebaseConfig);
     const dbGlobal = firebase.database();
 
-    let state = { sub: null, sec: null, top: null, quiz: null, selected: null };
+    let state = { sub: null, sec: null, top: null, quiz: null, selected: [] };
     let cloudData = { stats: {}, activeTest: null };
 
     function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -92,10 +91,10 @@
 
     async function syncFromCloud() {
         return new Promise((resolve) => {
-            tg.CloudStorage.getItems(['user_stats_v8', 'active_test_v8'], (err, val) => {
+            tg.CloudStorage.getItems(['user_stats_v9', 'active_test_v9'], (err, val) => {
                 if (!err) {
-                    if (val.user_stats_v8) cloudData.stats = JSON.parse(val.user_stats_v8);
-                    if (val.active_test_v8) cloudData.activeTest = JSON.parse(val.active_test_v8);
+                    if (val.user_stats_v9) cloudData.stats = JSON.parse(val.user_stats_v9);
+                    if (val.active_test_v9) cloudData.activeTest = JSON.parse(val.active_test_v9);
                 }
                 resolve();
             });
@@ -135,14 +134,12 @@
     function showSections(secs) {
         const list = document.getElementById('section-list'); list.innerHTML = '';
         document.getElementById('section-title').innerText = state.sub;
-
-        let resumeText = (cloudData.activeTest && cloudData.activeTest.isGlobal && cloudData.activeTest.sub === state.sub) ? " <small>(продолжить)</small>" : "";
-        const globalBtn = document.createElement('button');
-        globalBtn.className = 'main-btn global-test-btn';
-        globalBtn.innerHTML = `🔥 Полный тест по предмету${resumeText}`;
-        globalBtn.onclick = () => startGlobalTest(state.sub);
-        list.appendChild(globalBtn);
-
+        let res = (cloudData.activeTest && cloudData.activeTest.isGlobal && cloudData.activeTest.sub === state.sub) ? " <small>(продолжить)</small>" : "";
+        const gb = document.createElement('button');
+        gb.className = 'main-btn global-test-btn';
+        gb.innerHTML = `🔥 Полный тест по предмету${res}`;
+        gb.onclick = () => startGlobalTest(state.sub);
+        list.appendChild(gb);
         Object.keys(secs).forEach(sec => {
             list.appendChild(createCard(sec, () => { state.sec = sec; showTopics(secs[sec], sec); }));
         });
@@ -152,12 +149,12 @@
     function showTopics(tops, title) {
         const list = document.getElementById('topic-list'); list.innerHTML = '';
         if (database[state.sub].type === 'flat') {
-            let resumeText = (cloudData.activeTest && cloudData.activeTest.isGlobal && cloudData.activeTest.sub === state.sub) ? " <small>(продолжить)</small>" : "";
-            const globalBtn = document.createElement('button');
-            globalBtn.className = 'main-btn global-test-btn';
-            globalBtn.innerHTML = `🔥 Полный тест по предмету${resumeText}`;
-            globalBtn.onclick = () => startGlobalTest(state.sub);
-            list.appendChild(globalBtn);
+            let res = (cloudData.activeTest && cloudData.activeTest.isGlobal && cloudData.activeTest.sub === state.sub) ? " <small>(продолжить)</small>" : "";
+            const gb = document.createElement('button');
+            gb.className = 'main-btn global-test-btn';
+            gb.innerHTML = `🔥 Полный тест по предмету${res}`;
+            gb.onclick = () => startGlobalTest(state.sub);
+            list.appendChild(gb);
         }
         document.getElementById('topic-title').innerText = title;
         document.getElementById('topic-back-btn').onclick = () => {
@@ -165,9 +162,9 @@
             else showSubjects();
         };
         Object.keys(tops).forEach(t => {
-            let resume = (cloudData.activeTest && !cloudData.activeTest.isGlobal && cloudData.activeTest.top === t) ? " <small style='color:var(--primary)'>(продолжить)</small>" : "";
+            let res = (cloudData.activeTest && !cloudData.activeTest.isGlobal && cloudData.activeTest.top === t) ? " <small style='color:var(--primary)'>(продолжить)</small>" : "";
             const card = createCard(t, () => checkResume(t, tops[t]));
-            card.innerHTML = `<span>${t}${resume}</span><span style="color:var(--primary); font-size:22px;">›</span>`;
+            card.innerHTML = `<span>${t}${res}</span><span style="color:var(--primary); font-size:22px;">›</span>`;
             list.appendChild(card);
         });
         switchTab('topics');
@@ -192,10 +189,9 @@
             let all = []; const d = database[sub];
             if (d.type === 'nested') Object.values(d.sections).forEach(sec => Object.keys(sec).forEach(t => all.push(...getFresh(t, sec[t], 6))));
             else Object.keys(d.topics).forEach(t => all.push(...getFresh(t, d.topics[t], 8)));
-            
             if (all.length === 0) return alert("Все задания решены!");
             state.quiz = { top: "Полный тест", sub: sub, idx: 0, correct: 0, tasks: shuffle(all).slice(0, 30), isGlobal: true };
-            saveToCloud('active_test_v8', state.quiz);
+            saveToCloud('active_test_v9', state.quiz);
             switchTab('quiz'); renderTask();
         }
     }
@@ -207,13 +203,14 @@
             let fresh = getFresh(name, tasks, 15);
             if (fresh.length === 0) return alert("Тема полностью изучена!");
             state.quiz = { top: name, sub: state.sub, idx: 0, correct: 0, tasks: fresh, isGlobal: false };
-            saveToCloud('active_test_v8', state.quiz);
+            saveToCloud('active_test_v9', state.quiz);
             switchTab('quiz'); renderTask();
         }
     }
 
     function renderTask() {
-        const t = state.quiz.tasks[state.quiz.idx]; state.selected = null;
+        const t = state.quiz.tasks[state.quiz.idx]; 
+        state.selected = []; // Всегда сбрасываем массив выбора
         document.getElementById('q-header').innerText = state.quiz.top;
         document.getElementById('q-progress').innerText = `${state.quiz.idx + 1} / ${state.quiz.tasks.length}`;
         document.getElementById('q-img').src = t.question;
@@ -222,11 +219,20 @@
         document.getElementById('wrong-hint').style.display = 'none';
         const btn = document.getElementById('submit-btn'); btn.disabled = false; btn.className = 'main-btn'; btn.innerText = "Ответить";
         const optCont = document.getElementById('options-container'); const input = document.getElementById('user-answer');
+        
         if (t.options && t.options.length > 0) {
             input.style.display = 'none'; optCont.style.display = 'grid'; optCont.innerHTML = '';
             t.options.forEach(o => {
                 const b = document.createElement('button'); b.className = 'opt-btn'; b.innerText = o;
-                b.onclick = () => { state.selected = o; document.querySelectorAll('.opt-btn').forEach(el => el.classList.remove('selected')); b.classList.add('selected'); };
+                b.onclick = () => {
+                    if (state.selected.includes(o)) {
+                        state.selected = state.selected.filter(i => i !== o);
+                        b.classList.remove('selected');
+                    } else {
+                        state.selected.push(o);
+                        b.classList.add('selected');
+                    }
+                };
                 optCont.appendChild(b);
             });
         } else { optCont.style.display = 'none'; input.style.display = 'block'; input.value = ''; }
@@ -234,12 +240,21 @@
 
     function handleCheck() {
         const t = state.quiz.tasks[state.quiz.idx];
-        const val = t.options ? state.selected : document.getElementById('user-answer').value.trim();
-        if (!val) return;
-        
-        const btn = document.getElementById('submit-btn'); btn.disabled = true;
-        const ok = String(val).toLowerCase().replace(',','.') == String(t.answer).toLowerCase().replace(',','.');
-        
+        const btn = document.getElementById('submit-btn');
+        let ok = false;
+
+        if (t.options && t.options.length > 0) {
+            if (state.selected.length === 0) return;
+            const correctArr = String(t.answer).split(',').map(s => s.trim().toLowerCase()).sort();
+            const userArr = state.selected.map(s => String(s).trim().toLowerCase()).sort();
+            ok = JSON.stringify(correctArr) === JSON.stringify(userArr);
+        } else {
+            const val = document.getElementById('user-answer').value.trim();
+            if (!val) return;
+            ok = String(val).toLowerCase().replace(',','.') == String(t.answer).toLowerCase().replace(',','.');
+        }
+
+        btn.disabled = true;
         const topicName = t.topicOrigin || state.quiz.top;
         const cleanT = topicName.replace(/[.#$\[\]]/g, "_");
         const cleanS = state.quiz.sub.replace(/[.#$\[\]]/g, "_");
@@ -247,11 +262,10 @@
 
         if (ok) {
             state.quiz.correct++;
-            // Мгновенное сохранение в личную статистику
             if (!cloudData.stats[topicName]) cloudData.stats[topicName] = { solvedIds: [] };
             if (!cloudData.stats[topicName].solvedIds.includes(t.question)) {
                 cloudData.stats[topicName].solvedIds.push(t.question);
-                saveToCloud('user_stats_v8', cloudData.stats);
+                saveToCloud('user_stats_v9', cloudData.stats);
             }
             btn.classList.add('correct-bg'); btn.innerText = "Верно!";
             tg.HapticFeedback.notificationOccurred('success');
@@ -264,7 +278,7 @@
             ref.transaction(c => { if (!c) return { ok: 0, err: 1 }; c.err = (c.err || 0) + 1; return c; });
         }
         cloudData.activeTest = state.quiz;
-        saveToCloud('active_test_v8', cloudData.activeTest);
+        saveToCloud('active_test_v9', cloudData.activeTest);
         document.getElementById('solution-section').style.display = 'block';
     }
 
@@ -276,14 +290,11 @@
 
     function finishQuiz() {
         alert(`Тест завершен! Решено: ${state.quiz.correct} из ${state.quiz.tasks.length}`);
-        cloudData.activeTest = null;
-        tg.CloudStorage.removeItem('active_test_v8');
+        cloudData.activeTest = null; tg.CloudStorage.removeItem('active_test_v9');
         goToHome();
     }
 
-    function confirmExit() { 
-        tg.showConfirm("Выйти? Прогресс сохранен.", (ok) => { if (ok) goToHome(); }); 
-    }
+    function confirmExit() { tg.showConfirm("Выйти? Прогресс сохранен.", (ok) => { if (ok) goToHome(); }); }
 
     function renderStats() {
         const container = document.getElementById('stats-container'); container.innerHTML = '';
@@ -316,7 +327,7 @@
             if(ok) {
                 let tops = (database[sub].type === 'nested') ? [].concat(...Object.values(database[sub].sections).map(s => Object.keys(s))) : Object.keys(database[sub].topics);
                 tops.forEach(t => { if(cloudData.stats[t]) delete cloudData.stats[t]; });
-                saveToCloud('user_stats_v8', cloudData.stats); renderStats();
+                saveToCloud('user_stats_v9', cloudData.stats); renderStats();
             }
         });
     }
